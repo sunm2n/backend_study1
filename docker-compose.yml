@@ -1,5 +1,11 @@
 services:
 
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+
 
   database:
     image: mysql:8
@@ -7,8 +13,8 @@ services:
     ports:
       - "3307:3306"
     environment:
-      MYSQL_DATABASE: backend5
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: backendDB
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
     volumes:
       - ./volumes/mysql-data:/var/lib/mysql #내가 지정한 경로
     healthcheck:
@@ -22,27 +28,43 @@ services:
     container_name: backend1
     environment:
       PROJECT_NAME: 백앤드 서버1
+      DB_SERVER: ${DB_SERVER}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      REDIS_HOST: ${REDIS_HOST}
     depends_on:
-      database:
-        condition: service_healthy
+      - database
+      - redis
 
   backend2:  # 서비스 이름은 컨테이너간 통신하기 위한 이름
     image: backend
     container_name: backend2
     environment:
       PROJECT_NAME: 백앤드 서버2
+      DB_SERVER: ${DB_SERVER}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      REDIS_HOST: ${REDIS_HOST}
     depends_on:
-      database:
-        condition: service_healthy
+      - database
+      - redis
 
   backend3:  # 서비스 이름은 컨테이너간 통신하기 위한 이름
     image: backend
     container_name: backend3
     environment:
       PROJECT_NAME: 백앤드 서버3
+      DB_SERVER: ${DB_SERVER}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      REDIS_HOST: ${REDIS_HOST}
     depends_on:
-      database:
-        condition: service_healthy
+      - database
+      - redis
+
 
   nginx:
     image: nginx:1.25

@@ -132,9 +132,7 @@
         fetch(`/api/rooms/${roomId}`, { method: "POST" })
 
         //  const socket = new WebSocket('/ws-chat');
-        // const socket = new WebSocket('/ws-chat?nickname=' + nickname);
-        const socket = new WebSocket('ws://' + window.location.host + '/ws-chat?nickname=' + nickname);
-
+        const socket = new WebSocket('/ws-chat?nickname=' + nickname);
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, function (frame) {
@@ -147,7 +145,7 @@
 
 
             //일반채팅
-            stompClient.subscribe(`/topic/${roomId}`, function (chat) {
+            stompClient.subscribe(`/topic/room.${roomId}`, function (chat) {
                 const message = JSON.parse(chat.body);
                 showMessage(message.from, message.message);
             });
