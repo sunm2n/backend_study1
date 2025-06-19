@@ -43,3 +43,24 @@
 
 ---
 
+## 📅 3일차
+**Redis Pub/Sub 기반 WebSocket 채팅 메시지 분산 처리 구현**
+
+### ✅ 주요 작업
+
+- Redis 컨테이너 추가 및 `StringRedisTemplate` 기반 Pub/Sub 구조 도입
+- 각 Spring 서버가 Redis를 통해 채팅 메시지를 publish → subscribe 하도록 구성
+- `RedisPublisher` 클래스: 채팅 메시지를 Redis 채널(`room.*`)로 발행
+- `RedisSubscriber` 클래스: Redis로부터 메시지를 수신해 WebSocket 구독자에게 전달
+- `RedisMessageListenerContainer` 설정으로 `room.*`, `user.*` 채널 패턴 구독 처리
+- 서버 간 메시지 일관성을 위해 단일 서버가 아닌 모든 서버가 동일한 메시지를 수신하도록 설계
+- 귓속말 기능을 위해 `/user/queue/private` 경로 활용 (WebSocket STOMP)
+
+### 🔍 결과 확인
+
+- `backend1`, `backend2`, `backend3` 중 어떤 서버로 접속해도 채팅방 메시지가 모든 서버에 동기화됨
+- Redis가 메시지를 중계하여 **멀티 서버 환경에서 실시간 채팅 일관성 보장**
+- 클라이언트 간 귓속말 메시지 또한 정상 수신됨 (`/user/queue/private`)
+
+---
+
