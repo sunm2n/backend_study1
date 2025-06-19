@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Room-Based WebSocket Chat</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f7f8fa; }
+        .container {
+            width: 540px;
+            margin: 60px auto;
+            background: #fff;
+            padding: 32px 30px;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 24px; }
+        .row { display: flex; gap: 10px; align-items: center; margin-bottom: 13px; }
+        input[type="text"] {
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            padding: 9px;
+            outline: none;
+            background: #f9fafd;
+            transition: border 0.2s;
+            width: 100%;
+            max-width: 130px;
+        }
+        input[type="text"]:focus {
+            border-color: #4078c0;
+            background: #fff;
+        }
+        button {
+            background: #4078c0; color: white; font-weight: bold;
+            border: none; border-radius: 6px; padding: 10px 20px;
+            font-size: 15px; cursor: pointer; transition: background 0.2s;
+        }
+        button:hover { background: #285690; }
+        .btn-disconnect {
+            background: #eee; color: #285690; font-weight: bold;
+        }
+        .btn-disconnect:hover { background: #e0e8f5; }
+        #chatArea {
+            width: 100%; height: 250px; border: 1px solid #aaa;
+            border-radius: 8px; margin-bottom: 18px; overflow-y: auto;
+            background: #fafdff; padding: 10px 7px; font-size: 15px;
+        }
+        .sysmsg { color: #666; font-style: italic; margin: 7px 0 3px 0; }
+        .msgrow { margin-bottom: 3px; }
+        .from { font-weight: bold; color: #4078c0; }
+        .hidden { display: none; }
+        #roomList { margin-bottom: 20px; }
+        .room-item {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        .room-item:hover {
+            background: #e8f0ff;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Pure WebSocket Chat Room ADD</h2>
+
+    <!-- 방 목록 표시 -->
+    <div id="roomList">
+        <strong>방 목록:</strong>
+        <div id="rooms"></div>
+    </div>
+
+    <!-- 닉네임 입력 및 disconnect -->
+    <div class="row" id="nicknameRow">
+<!--        <input type="text" id="user" placeholder="닉네임">-->
+        <input type="text" id="room" placeholder="방 번호">
+        <button onclick="manualConnect()">Connect</button>
+
+    </div>
+
+    <!-- 채팅 영역 (처음엔 숨김) -->
+    <div id="chatWrapper" class="hidden">
+        <div id="chatArea"></div>
+        <div class="row">
+            <input type="text" id="msg" placeholder="메시지" onkeydown="if(event.key==='Enter'){sendMessage();}">
+            <button onclick="sendMessage()">Send</button>
+            <button class="btn-disconnect" onclick="disconnect()">Disconnect</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ws = null;
+    let roomId = "";
+    let nickname = "";
+
+    window.onload = function () {
+        loadRoomList();
+    };
+
+    function loadRoomList() {
+        fetch("/api/rooms")
+            .then(response => response.json())
+            .then(data => {
+                const roomsDiv = document.getElementById("rooms");
+                const roomListSection = document.getElementById("roomList");
+                roomsDiv.innerHTML = "";
+
+                if (data.length === 0) {
+                    roomListSection.classList.add("hidden");
+                } else {
+                    roomListSection.classList.remove("hidden");
+                    data.forEach(room => {
+                        const div = document.createElement("div");
+                        div.className = "room-item";
+                        div.textContent = `방 번호: ${room.roomId}`;
+                        div.onclick = () => enterRoom(room.roomId);
+                        roomsDiv.appendChild(div);
+                    });
+                }
+            });
+    }
+
+    function enterRoom(id, inputNick = null) {
+        if (!inputNick) {
+            const nick = prompt("닉네임을 입력하세요:");
+            if (!nick) {
+                alert("닉네임이 필요합니다.");
+                return;
+            }
+            nickname = nick;
+        } else {
+            nickname = inputNick;
+        }
+
+        roomId = id;
+
+      //방목록 데이터베이스에 저장하는 곳
+      //방목록 데이터베이스에 저장하는 곳
+      //방목록 데이터베이스에 저장하는 곳
+      //  fetch(`/api/rooms/${roomId}`, { method: "POST" })
+
+
+        ws = new WebSocket("/ws-chat");
+
+        ws.onopen = function () {
+            showSysMsg(`[${nickname}]님이 방 [${roomId}]에 입장했습니다.`);
+            document.getElementById("chatWrapper").classList.remove("hidden");
+            document.getElementById("roomList").classList.add("hidden");
+            document.getElementById("nicknameRow").classList.add("hidden");
+        };
+
+        ws.onmessage = function (event) {
+            const msg = JSON.parse(event.data);
+            showMessage(msg.from, msg.message, msg.roomId);
+        };
+
+        ws.onclose = function () {
+            showSysMsg("Disconnected");
+            document.getElementById("chatWrapper").classList.add("hidden");
+            document.getElementById("roomList").classList.remove("hidden");
+            document.getElementById("nicknameRow").classList.remove("hidden");
+            loadRoomList();
+        };
+    }
+
+    function manualConnect() {
+        const inputRoom = document.getElementById("room").value;
+        if (!inputRoom) {
+            alert("방 번호를 입력하세요.");
+            return;
+        }
+
+        const inputNick = prompt("닉네임을 입력하세요:");
+        if (!inputNick) {
+            alert("닉네임이 필요합니다.");
+            return;
+        }
+
+        nickname = inputNick;
+        enterRoom(inputRoom, inputNick);
+    }
+
+    function disconnect() {
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+    }
+
+    function sendMessage() {
+        const msg = document.getElementById("msg").value;
+        if (!nickname || !msg || !roomId) {
+            alert("모든 정보를 입력해주세요.");
+            return;
+        }
+
+        ws.send(JSON.stringify({
+            from: nickname,
+            message: msg,
+            roomId: roomId
+        }));
+        document.getElementById("msg").value = "";
+    }
+
+    function showMessage(from, message, room) {
+        const chatArea = document.getElementById("chatArea");
+        chatArea.innerHTML += `<div class="msgrow"><span class="from">[${room}] ${from}:</span> ${message}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function showSysMsg(msg) {
+        const chatArea = document.getElementById("chatArea");
+        chatArea.innerHTML += `<div class="sysmsg">${msg}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Pure WebSocket Chat</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f7f8fa; }
+        .container {
+            width: 400px; margin: 60px auto; background: #fff; padding: 32px 30px;
+            border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 24px; }
+        #chatArea {
+            width: 100%; height: 250px; border: 1px solid #aaa;
+            border-radius: 8px; margin-bottom: 18px; overflow-y: auto;
+            background: #fafdff; padding: 10px 7px; font-size: 15px;
+        }
+        .row { display: flex; gap: 10px; align-items: center; margin-bottom: 13px; }
+        input[type="text"] {
+            box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;
+            font-size: 15px; padding: 9px; outline: none; background: #f9fafd;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus { border-color: #4078c0; background: #fff; }
+        #user { width: 110px; }
+        #msg { flex: 1; min-width: 0; }
+        button {
+            background: #4078c0; color: white; font-weight: bold;
+            border: none; border-radius: 6px; padding: 10px 20px;
+            font-size: 15px; cursor: pointer; transition: background 0.2s;
+        }
+        button:hover { background: #285690; }
+        .btn-disconnect {
+            background: #eee; color: #285690; font-weight: bold;
+        }
+        .btn-disconnect:hover { background: #e0e8f5; }
+        .sysmsg { color: #666; font-style: italic; margin: 7px 0 3px 0;}
+        .msgrow { margin-bottom: 3px;}
+        .from { font-weight: bold; color: #4078c0;}
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Pure WebSocket Chat</h2>
+
+    <!-- 로그인 영역 -->
+    <div class="row" style="margin-bottom: 15px;">
+        <input type="text" id="user" placeholder="닉네임">
+        <button onclick="connect()">Connect</button>
+        <button class="btn-disconnect" onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <!-- 채팅 영역 (처음엔 숨김) -->
+    <div id="chatWrapper" class="hidden">
+        <div id="chatArea"></div>
+        <div class="row">
+            <input type="text" id="msg" placeholder="메시지" onkeydown="if(event.key==='Enter'){sendMessage();}">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ws = null;
+
+    function connect() {
+        const user = document.getElementById("user").value;
+        if (!user) {
+            alert("닉네임을 입력하세요!");
+            return;
+        }
+
+        ws = new WebSocket("/ws-chat");
+
+        ws.onopen = function () {
+            showSysMsg('Connected!');
+            document.getElementById("chatWrapper").classList.remove("hidden");
+        };
+
+        ws.onmessage = function (event) {
+            const msg = JSON.parse(event.data);
+            showMessage(msg.from, msg.message);
+        };
+
+        ws.onclose = function () {
+            showSysMsg('Disconnected');
+            document.getElementById("chatWrapper").classList.add("hidden");
+        };
+    }
+
+    function disconnect() {
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+    }
+
+    function sendMessage() {
+        const user = document.getElementById("user").value;
+        const msg = document.getElementById("msg").value;
+        if (!user || !msg) {
+            alert("닉네임과 메시지를 모두 입력하세요!");
+            return;
+        }
+        ws.send(JSON.stringify({ from: user, message: msg }));
+        document.getElementById("msg").value = "";
+    }
+
+    function showMessage(from, message) {
+        const chatArea = document.getElementById("chatArea");
+        chatArea.innerHTML += `<div class="msgrow"><span class="from">${from}:</span> ${message}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function showSysMsg(msg) {
+        const chatArea = document.getElementById("chatArea");
+        chatArea.innerHTML += `<div class="sysmsg">${msg}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+</script>
+</body>
+</html>

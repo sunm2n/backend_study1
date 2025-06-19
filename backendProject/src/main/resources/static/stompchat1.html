@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket STOMP Chat</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f7f8fa; }
+        .container {
+            width: 400px; margin: 60px auto; background: #fff; padding: 32px 30px;
+            border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 26px;}
+        #chatArea {
+            width: 100%; height: 250px; border: 1px solid #aaa;
+            margin-bottom: 18px; overflow-y: auto; padding: 10px 7px; border-radius: 8px;
+            background: #fafdff; font-size: 15px;
+        }
+        .row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+        input[type="text"] {
+            box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;
+            font-size: 15px; padding: 9px; outline: none; background: #f9fafd;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus { border-color: #4078c0; background: #fff; }
+        #user { width: 110px; }
+        #msg { flex: 1; min-width: 0; }
+        button {
+            background: #4078c0; color: white; font-weight: bold;
+            border: none; border-radius: 6px; padding: 10px 20px;
+            font-size: 15px; cursor: pointer; transition: background 0.2s;
+        }
+        button:hover { background: #285690; }
+        .btn-disconnect {
+            background: #eee; color: #285690; font-weight: bold;
+        }
+        .btn-disconnect:hover { background: #e0e8f5; }
+        .sysmsg { color: #666; font-style: italic; margin: 7px 0 3px 0;}
+        .msgrow { margin-bottom: 3px;}
+        .from { font-weight: bold; color: #4078c0;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Spring WebSocket + STOMP Chat</h2>
+    <div class="row" style="margin-bottom: 15px;">
+        <input type="text" id="user" placeholder="닉네임">
+        <button onclick="connect()">Connect</button>
+        <button class="btn-disconnect" onclick="disconnect()">Disconnect</button>
+    </div>
+    <div id="chatArea"></div>
+    <div class="row">
+        <input type="text" id="msg" placeholder="메시지">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<!-- SockJS와 STOMP JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new WebSocket('/ws-chat');
+    //    const socket = new WebSocket('ws://localhost:8080/ws-chat');
+    //    const socket = new WebSocket('ws://192.168.219.111:8080/ws-chat');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            showSysMsg('Connected!');
+            stompClient.subscribe('/topic/public', function (chat) {
+                const message = JSON.parse(chat.body);
+                showMessage(message.from, message.message);
+                console.log("chat 확인 : "+chat)
+            });
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        showSysMsg('Disconnected');
+    }
+
+    function sendMessage() {
+        const user = document.getElementById("user").value;
+        const msg = document.getElementById("msg").value;
+        if (!user || !msg) {
+            alert("닉네임과 메시지를 모두 입력하세요!");
+            return;
+        }
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify({'from': user, 'message': msg}));
+        document.getElementById("msg").value = "";
+    }
+
+    function showMessage(from, message) {
+        const chatArea = document.getElementById("chatArea");
+        chatArea.innerHTML += `<div class="msgrow"><span class="from">${from}:</span> ${message}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    function showSysMsg(msg) {
+        const chatArea = document.getElementById("chatArea");
+        chatArea.innerHTML += `<div class="sysmsg">${msg}</div>`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    // 엔터키로 메시지 전송
+    document.getElementById('msg').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+</script>
+</body>
+</html>
