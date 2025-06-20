@@ -30,7 +30,11 @@ public class GPTService {
         //http 요청 작성
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.openai.com/v1/responses"))
+<<<<<<< HEAD
                 .header("Authorization","Bearer OPENAI_API_KEY")
+=======
+                .header("Authorization","")
+>>>>>>> 6c60338 (4일차: openAI API를 사용한 챗봇 ê구현(토큰 제외))
                 .header("Content-Type","application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody))) //본문 삽입
                 .build();
