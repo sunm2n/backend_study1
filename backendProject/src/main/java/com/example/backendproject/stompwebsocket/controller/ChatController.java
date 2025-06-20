@@ -1,6 +1,7 @@
 package com.example.backendproject.stompwebsocket.controller;
 
 
+import com.example.backendproject.stompwebsocket.gpt.GPTService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +17,6 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 public class ChatController {
 
-    //단일 브로드캐스트 (방을 동적으로 생성이 안됨)
-//    @MessageMapping("/chat.sendMessage")
-//    @SendTo("/topic/public")
-//    public ChatMessage sendMessage(ChatMessage message){
-//        return message;
-//    }
-
 
     //서버가 클라이언트에게 수동으로 메세지를 보낼 수 있도록 하는 클래스
     private final SimpMessagingTemplate template;
@@ -33,6 +27,26 @@ public class ChatController {
 
     private final RedisPublisher redisPublisher;
     private ObjectMapper objectMapper  = new ObjectMapper();
+
+    private final GPTService gptService;
+
+
+
+    // 단일 브로드캐스트 (방을 동적으로 생성이 안됨)
+    @MessageMapping("/gpt")
+    public void sendMessageGPT(ChatMessage message) throws Exception {
+
+
+        template.convertAndSend("/topic/gpt",message); // 내가 보낸 메세지 출력
+
+        ///  gpt 메시지 반환
+        String getResponse = gptService.gptMessage(message.getMessage());
+        ChatMessage chatMessage = new ChatMessage("난 GPT",getResponse);
+        template.convertAndSend("/topic/gpt",chatMessage);
+
+    }
+
+
 
     @MessageMapping("/chat.sendMessage")
     public void sendmessage(ChatMessage message) throws JsonProcessingException {

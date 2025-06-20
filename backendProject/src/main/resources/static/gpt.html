@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket + STOMP + GPT Chat</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f7f8fa; }
+        .container {
+            width: 420px; margin: 60px auto; background: #fff; padding: 32px 32px 24px 32px;
+            border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 24px;}
+        #messages {
+            width: 100%; height: 270px; border: 1px solid #ccc;
+            border-radius: 8px; margin-bottom: 16px; overflow-y: auto;
+            background: #fafdff; padding: 12px 10px; font-size: 15px;
+        }
+        form { margin: 0; }
+        #roomForm label {
+            display: block; color: #444; font-size: 15px; margin: 16px 0 9px 0;
+            text-align: left;
+        }
+        #roomForm input[type="text"] {
+            width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;
+            font-size: 15px; padding: 9px; background: #f9fafd;
+            margin-bottom: 6px; transition: border 0.2s;
+        }
+        #roomForm input[type="text"]:focus { border-color: #4078c0; background: #fff; }
+        #roomForm button {
+            width: 100%; background: #4078c0; color: white; font-weight: bold;
+            border: none; border-radius: 6px; padding: 11px; margin-top: 8px;
+            font-size: 16px; cursor: pointer; transition: background 0.2s;
+        }
+        #roomForm button:hover { background: #285690; }
+        #chatSection { }
+        .row { display: flex; gap: 10px; align-items: center; margin-bottom: 0; }
+        #messageInput {
+            flex: 1; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;
+            font-size: 15px; padding: 9px; background: #f9fafd;
+            transition: border 0.2s;
+        }
+        #messageInput:focus { border-color: #4078c0; background: #fff; }
+        #messageForm button {
+            background: #4078c0; color: white; font-weight: bold;
+            border: none; border-radius: 6px; padding: 10px 20px;
+            font-size: 15px; cursor: pointer; transition: background 0.2s;
+        }
+        #messageForm button:hover { background: #285690; }
+        .from-gpt { color: #0070bc; font-weight: bold; }
+        .from-me { color: #27ae60; font-weight: bold; }
+        .from-user { color: #444; font-weight: bold; }
+        .system { color: #aaa; font-style: italic; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>GPT와 함께하는 AI 챗봇</h2>
+    <form id="roomForm">
+        <label>방 이름</label>
+        <input type="text" id="roomInput" required autocomplete="off">
+        <label>닉네임</label>
+        <input type="text" id="nickInput" required autocomplete="off">
+        <button type="submit">입장</button>
+    </form>
+
+    <div id="chatSection" style="display:none;">
+        <div id="messages"></div>
+        <form id="messageForm" autocomplete="off">
+            <div class="row">
+                <input type="text" id="messageInput" placeholder="메시지 입력..." required autocomplete="off"/>
+                <button type="submit">전송</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SockJS, Stomp.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    let stompClient = null;
+    let roomName = "";
+    let myName = "";
+
+    function connectToRoom(room, nick) {
+        //  const socket = new WebSocket('ws://localhost:8080/ws-gpt'); //로컬 테스트용
+        const socket = new WebSocket('/ws-gpt'); //도커 배포용
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            document.getElementById('chatSection').style.display = '';
+            document.getElementById('roomForm').style.display = 'none';
+
+            stompClient.subscribe('/topic/gpt', function (msg) {
+                const data = JSON.parse(msg.body);
+                showMessage(data.from, data.message);
+            });
+
+            showSystemMsg("방 [" + room + "]에 입장하였습니다.");
+        });
+    }
+    function showMessage(from, message) {
+        const messagesDiv = document.getElementById('messages');
+        const msgElem = document.createElement('div');
+        let fromClass = 'from-user';
+        if (from === myName) fromClass = 'from-me';
+        else if (from === 'GPT' || from === '난 GPT') fromClass = 'from-gpt';
+        msgElem.innerHTML = `<span class="${fromClass}">${from}</span>: ${message}`;
+        messagesDiv.appendChild(msgElem);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    function showSystemMsg(message) {
+        const messagesDiv = document.getElementById('messages');
+        const msgElem = document.createElement('div');
+        msgElem.innerHTML = `<span class="system">${message}</span>`;
+        messagesDiv.appendChild(msgElem);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    document.getElementById('roomForm').onsubmit = function (e) {
+        e.preventDefault();
+        roomName = document.getElementById('roomInput').value.trim();
+        myName = document.getElementById('nickInput').value.trim();
+        if (roomName && myName) {
+            connectToRoom(roomName, myName);
+        }
+    };
+
+    document.getElementById('messageForm').onsubmit = function (e) {
+        e.preventDefault();
+        const input = document.getElementById('messageInput');
+        const msg = input.value.trim();
+        if (msg && stompClient && roomName) {
+            stompClient.send('/app/gpt', {}, JSON.stringify({from: myName, message: msg}));
+            input.value = '';
+        }
+    };
+</script>
+</body>
+</html>

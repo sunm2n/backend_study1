@@ -17,4 +17,10 @@ public class ChatMessage {
 
     private String to; // 귓속말을 받은 사람
     private String roomId; // 방 id
+
+    public ChatMessage(String from, String message) {
+        this.from = from;
+        this.message = message;
+
+    }
 }
