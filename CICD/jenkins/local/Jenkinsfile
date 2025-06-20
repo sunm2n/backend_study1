@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+
+    environment {
+        PROJECT_DIR = '/var/jenkins_home/workspace/backend1_local/backendProject'   // 백앤드 서버 프로젝트 폴더
+         COMPOSE_DIR = '/var/jenkins_home/workspace/backend1_local'  //  프로젝트 루트 폴더에서 docker-compose.yml 실행
+        IMAGE_NAME = 'backend'
+    }
+
+    stages {
+
+          stage('Cleanup Containers') {
+            steps {
+                dir("${COMPOSE_DIR}") {
+                  sh 'docker-compose down'
+                }
+             }
+          }
+
+
+        stage('Build') {
+          steps {
+            dir("${PROJECT_DIR}") {
+              sh 'chmod +x gradlew'
+              sh './gradlew clean build' // 테스트 제외
+            }
+          }
+        }
+
+        stage('Docker Build') {
+          steps {
+            dir("${PROJECT_DIR}") {
+              sh "docker build -t ${IMAGE_NAME} ."
+            }
+          }
+        }
+
+        stage('Compose Up') {
+          steps {
+            dir("${COMPOSE_DIR}") {
+              sh 'pwd'
+              sh 'ls -l ./nginx/nginx.conf'
+              sh 'docker-compose up -d --build'
+            }
+          }
+        }
+
+        stage('Restart Nginx') {
+          steps {
+            sh 'docker restart nginx || true'
+          }
+        }
+
+      }
+}

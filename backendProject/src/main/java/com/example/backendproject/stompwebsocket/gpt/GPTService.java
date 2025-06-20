@@ -1,3 +1,4 @@
+
 package com.example.backendproject.stompwebsocket.gpt;
 
 
@@ -31,10 +32,14 @@ public class GPTService {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.openai.com/v1/responses"))
 <<<<<<< HEAD
+<<<<<<< HEAD
                 .header("Authorization","Bearer OPENAI_API_KEY")
 =======
                 .header("Authorization","")
 >>>>>>> 6c60338 (4일차: openAI API를 사용한 챗봇 ê구현(토큰 제외))
+=======
+                .header("Authorization","Bearer")
+>>>>>>> 4d85a90 (remove exposed OpenAI API key)
                 .header("Content-Type","application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody))) //본문 삽입
                 .build();
