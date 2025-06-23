@@ -1,6 +1,4 @@
-
 package com.example.backendproject.stompwebsocket.gpt;
-
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,23 +25,13 @@ public class GPTService {
         requestBody .put("model","gpt-4.1");
         requestBody .put("input",message);
 
-
         //http 요청 작성
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.openai.com/v1/responses"))
-<<<<<<< HEAD
-<<<<<<< HEAD
-                .header("Authorization","Bearer OPENAI_API_KEY")
-=======
-                .header("Authorization","")
->>>>>>> 6c60338 (4일차: openAI API를 사용한 챗봇 ê구현(토큰 제외))
-=======
-                .header("Authorization","Bearer")
->>>>>>> 4d85a90 (remove exposed OpenAI API key)
+                .header("Authorization", "Bearer " + System.getenv("OPENAI_API_KEY"))
                 .header("Content-Type","application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody))) //본문 삽입
                 .build();
-
 
         //요청 전송 및 응답 수신
         HttpClient  client = HttpClient.newHttpClient();
