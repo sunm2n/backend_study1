@@ -167,7 +167,7 @@ docker network create prod_server
 
 ### 🗂️ ERD 이미지
 
-![img.png](img.png)
+![ERD](./ERD.png)
 
 ### 🔍 결과 확인
 
