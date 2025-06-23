@@ -8,7 +8,7 @@ out/
 target/
 
 # 환경 변수
-.env
+Data/.env
 
 # 로그 파일
 *.log
