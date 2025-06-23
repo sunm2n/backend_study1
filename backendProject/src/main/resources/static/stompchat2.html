@@ -129,9 +129,9 @@
 
         //방생성기능
         //방생성기능
-        fetch(`/api/rooms/${roomId}`, { method: "POST" })
+      fetch(`/api/rooms/${roomId}`, { method: "POST" })
 
-        //  const socket = new WebSocket('/ws-chat');
+      //  const socket = new WebSocket('/ws-chat');
         const socket = new WebSocket('/ws-chat?nickname=' + nickname);
         stompClient = Stomp.over(socket);
 

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+
+<head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f7f8fa; }
+        .container {
+            width: 350px; margin: 60px auto; background: #fff; padding: 40px 32px;
+            border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 36px; }
+        .main-btn {
+            width: 100%; background: #4078c0; color: white; font-weight: bold;
+            border: none; border-radius: 8px; padding: 17px 0;
+            font-size: 18px; cursor: pointer; transition: background 0.18s;
+            margin-bottom: 24px;
+        }
+        .main-btn:last-child { margin-bottom: 0; }
+        .main-btn:hover { background: #285690; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <button type="button" class="main-btn" id="logout-btn">Logout</button>
+
+
+    <h2>메인 메뉴</h2>
+
+
+    <button class="main-btn" onclick="location.href='myinfo.html'">내 정보수정</button>
+    <button class="main-btn" onclick="location.href='board.html'">게시판</button>
+    <button class="main-btn" onclick="location.href='gpt.html'">GPT AI 챗봇</button>
+    <button class="main-btn" onclick="location.href='stompchat2.html'">실시간 채팅방</button>
+</div>
+
+
+
+<script>
+    // URL 쿼리스트링에서 accessToken, refreshToken, 기타 정보 추출
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+    const id = params.get('id');
+
+    if (accessToken) {
+        localStorage.setItem("accessToken", accessToken);
+    }
+    if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+    }
+    if (id) {
+        localStorage.setItem("user_id", id);
+    }
+
+    const myUserId = localStorage.getItem("user_id");
+
+
+    fetch("/api/user/me/"+myUserId)
+        .then(res => res.json())
+        .then(user => {
+            localStorage.setItem("username", user.username);
+        });
+
+
+
+    console.log("localStorage id = "+myUserId)
+    console.log("params id = "+id)
+
+    document.getElementById('logout-btn').onclick = function() {
+        // localStorage 클리어
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user_id");
+
+        // 로그아웃 서버 요청(POST)
+        fetch('/logout', { method: 'POST', credentials: 'include' })
+            .then(() => {
+                // 메인/로그인 페이지로 이동
+                location.href = "index.html";
+            });
+    };
+
+    // 필요시 userid, username 등도 쿼리스트링에 담아 같이 전달해서 저장 가능
+
+    // 이후 인증이 필요한 요청에서 localStorage의 accessToken을 Authorization 헤더로 사용
+</script>
+
+</body>
+</html>

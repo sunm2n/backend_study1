@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>게시판</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f7f8fa; }
+        .container {
+            width: 520px; margin: 60px auto; background: #fff; padding: 40px 34px;
+            border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        h2 { color: #2c3e50; text-align: center; margin-bottom: 25px;}
+        .board-list { width: 100%; margin-bottom: 26px;}
+        .board-list th, .board-list td { padding: 7px 8px; border-bottom: 1px solid #ddd; }
+        .board-list th { background: #f0f3fa; }
+        .board-list td.title { cursor: pointer; color: #285690;}
+        .board-list td.title:hover { text-decoration: underline; }
+        .write-btn, .back-btn, .list-btn {
+            width: 100%; background: #4078c0; color: white; font-weight: bold;
+            border: none; border-radius: 6px; padding: 11px; margin-top: 14px;
+            font-size: 16px; cursor: pointer; transition: background 0.18s;
+        }
+        .write-btn:hover, .back-btn:hover, .list-btn:hover { background: #285690; }
+        .list-btn, .back-btn { background: #eee; color: #285690; }
+        .list-btn:hover, .back-btn:hover { background: #e0e8f5; }
+        .form-group { margin-bottom: 13px;}
+        label { display: block; color: #444; margin-bottom: 4px; }
+        input[type="text"], textarea {
+            width: 100%; box-sizing: border-box; padding: 8px;
+            border: 1px solid #ccc; border-radius: 6px; font-size: 15px; margin-bottom: 2px;
+        }
+        textarea { min-height: 90px; }
+        .msg { margin: 15px 0 0 0; text-align: center; font-weight: bold;}
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h2>게시판</h2>
+
+<!--    <div id="search-area">-->
+<!--&lt;!&ndash;        <input type="text" id="search" placeholder="검색어 입력">&ndash;&gt;-->
+<!--       <input type="text" id="search" placeholder="검색어 입력" oninput="searchPosts(0)"> &lt;!&ndash;  입력하자마자 반응&ndash;&gt;-->
+<!--        <button onclick="searchPosts()">검색</button>-->
+<!--    </div>-->
+
+    <!-- 게시글 목록 화면 -->
+    <div id="list-area">
+        <button class="write-btn" onclick="showWriteForm()">글쓰기</button>
+        <table class="board-list" id="board-table">
+            <thead>
+            <tr>
+                <th>번호</th><th>제목</th><th>작성자</th><th>작성일</th>
+            </tr>
+            </thead>
+            <tbody id="board-list-body"></tbody>
+        </table>
+
+
+
+        <div id="paging" style="text-align:center; margin-top:14px;"></div> <!-- 페이징 -->
+
+
+
+        <button class="back-btn" onclick="location.href='main.html'">메인으로</button>
+    </div>
+
+    <!-- 글쓰기 화면 -->
+    <div id="write-area" style="display:none;">
+        <form id="write-form">
+            <div class="form-group">
+                <label for="title">제목</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="content">내용</label>
+                <textarea id="content" name="content" required></textarea>
+            </div>
+            <button type="submit" class="write-btn">등록</button>
+            <button type="button" class="list-btn" onclick="showList()">목록</button>
+        </form>
+        <div class="msg" id="write-msg"></div>
+    </div>
+
+    <!-- 상세/수정 화면 -->
+    <div id="detail-area" style="display:none;">
+        <h3 id="detail-title"></h3>
+        <div id="detail-content"></div>
+        <div style="margin-top:8px;color:#666;font-size:14px;">
+            작성자: <span id="detail-writer"></span>
+            <span style="margin-left:10px;">작성일: <span id="detail-date"></span></span>
+        </div>
+        <button class="write-btn" id="edit-btn" onclick="showEditForm()">수정</button>
+        <button class="list-btn" onclick="showList()">목록</button>
+        <button class="back-btn" onclick="location.href='main.html'">메인으로</button>
+        <button class="write-btn"  id="delete-btn" style="background:#e74c3c;margin-top:6px;" onclick="deleteBoard()">삭제</button>
+        <!-- 댓글/대댓글 영역 추가 -->
+        <div id="comment-area" style="margin-top:30px;"></div>
+    </div>
+
+    <!-- 수정 화면 -->
+    <div id="edit-area" style="display:none;">
+        <form id="edit-form">
+            <div class="form-group">
+                <label for="edit-title">제목</label>
+                <input type="text" id="edit-title" name="edit-title" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-content">내용</label>
+                <textarea id="edit-content" name="edit-content" required></textarea>
+            </div>
+            <button type="submit" class="write-btn">수정 완료</button>
+            <button type="button" class="list-btn" onclick="showList()">목록</button>
+        </form>
+        <div class="msg" id="edit-msg"></div>
+    </div>
+
+
+
+</div>
+<script>
+    //게시글 검색
+
+    let currentPage = 0;
+    let pageSize = 10;
+
+
+    // ======= 게시글 목록 =======
+    function loadBoards() {
+        //const myUserId = localStorage.getItem("userId"); // 내 userId (PK) 가져옴
+        fetch('/boards')
+            .then(res => res.json())
+            .then(list => {
+                let html = '';
+                list
+                    //.filter(b => String(b.userId) === String(myUserId)) // 내 글만 남김
+                    .forEach((b, idx) => {
+                        html += `<tr>
+                    <td>${b.id}</td>
+                    <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
+                    <td>${b.username || b.user_id}</td>
+                    <td>${b.createdDate ? b.createdDate.substring(0,10) : ''}</td>
+                </tr>`;
+                    });
+                // ★★★★★ 이 줄만 남기고 아래 한 줄만 실행!
+                document.getElementById('board-list-body').innerHTML = html;
+            });
+    }
+
+    loadBoards();
+
+    function showList() {
+        document.getElementById('list-area').style.display = '';
+        document.getElementById('write-area').style.display = 'none';
+        document.getElementById('detail-area').style.display = 'none';
+        document.getElementById('edit-area').style.display = 'none';
+    //    document.getElementById('search-area').style.display = ''; // ← 검색창 보이기
+        loadBoards();
+    }
+
+    function showWriteForm() {
+        document.getElementById('list-area').style.display = 'none';
+        document.getElementById('write-area').style.display = '';
+        document.getElementById('detail-area').style.display = 'none';
+        document.getElementById('edit-area').style.display = 'none';
+     //   document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
+        document.getElementById('write-form').reset();
+        document.getElementById('write-msg').innerHTML = '';
+    }
+
+    document.getElementById('write-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const userId = localStorage.getItem("user_id");
+        if (!userId) {
+            document.getElementById('write-msg').innerHTML = `<span class="error">로그인 후 작성 가능합니다.</span>`;
+            return;
+        }
+        const data = {
+            title: document.getElementById('title').value,
+            content: document.getElementById('content').value,
+            userId: Number(userId)
+        };
+        fetch('/boards', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+            .then(res => {
+                if(res.ok) return res.json();
+                return res.text().then(msg => { throw new Error(msg); });
+            })
+            .then(() => {
+                showList();
+            })
+            .catch(err => {
+                document.getElementById('write-msg').innerHTML = `<span class="error">등록 실패: ${err.message}</span>`;
+            });
+    });
+
+    let currentBoardId = null;
+    function showDetail(id) {
+
+        fetch(`/boards/${id}`)
+            .then(res => res.json())
+            .then(board => {
+                currentBoardId = board.id;
+                document.getElementById('detail-title').textContent = board.title;
+                document.getElementById('detail-content').textContent = board.content;
+                document.getElementById('detail-writer').textContent = board.userId;
+
+                console.log("localStorage.getItem(userId) = ",localStorage.getItem("user_id"))
+                console.log("board.userId = ",board.user_id)
+
+                document.getElementById('detail-writer').textContent = board.username;
+                document.getElementById('detail-date').textContent = board.created_date ? board.created_date.substring(0,10) : '';
+                document.getElementById('list-area').style.display = 'none';
+                document.getElementById('write-area').style.display = 'none';
+                document.getElementById('detail-area').style.display = '';
+                document.getElementById('edit-area').style.display = 'none';
+            //    document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
+                const myUserId = localStorage.getItem("user_id");
+                if (String(board.user_id) === String(myUserId)) {
+                    document.getElementById('edit-btn').style.display = '';
+                    document.getElementById('delete-btn').style.display = '';
+                } else {
+                    document.getElementById('edit-btn').style.display = 'none';
+                    document.getElementById('delete-btn').style.display = 'none';
+                }
+                loadComments(board.id); // 댓글 로딩!
+            });
+    }
+    function showEditForm() {
+        fetch(`/boards/${currentBoardId}`)
+            .then(res => res.json())
+            .then(board => {
+                document.getElementById('edit-title').value = board.title;
+                document.getElementById('edit-content').value = board.content;
+                document.getElementById('list-area').style.display = 'none';
+                document.getElementById('write-area').style.display = 'none';
+                document.getElementById('detail-area').style.display = 'none';
+                document.getElementById('edit-area').style.display = '';
+                document.getElementById('edit-msg').innerHTML = '';
+               // document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
+            });
+    }
+    document.getElementById('edit-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            title: document.getElementById('edit-title').value,
+            content: document.getElementById('edit-content').value
+        };
+        fetch(`/boards/${currentBoardId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+            .then(res => {
+                if(res.ok) return res.json();
+                return res.text().then(msg => { throw new Error(msg); });
+            })
+            .then(() => {
+                showList();
+            })
+            .catch(err => {
+                document.getElementById('edit-msg').innerHTML = `<span class="error">수정 실패: ${err.message}</span>`;
+            });
+    });
+    function deleteBoard() {
+        if(!confirm("정말 삭제하시겠습니까?")) return;
+        fetch(`/boards/${currentBoardId}`, { method: 'DELETE' })
+            .then(res => {
+                if(res.ok) showList();
+                else return res.text().then(msg => { throw new Error(msg); });
+            })
+            .catch(err => {
+                alert('삭제 실패: ' + err.message);
+            });
+    }
+
+
+    // ======= [댓글/대댓글 영역] =======
+
+    // 댓글 목록 로딩
+    function loadComments(boardId) {
+        fetch(`/api/comments?boardId=${boardId}`)
+            .then(res => res.json())
+            .then(list => {
+                const commentTree = buildCommentTree(list);
+                let html = `
+            <h4 style="margin-top:20px">💬 댓글</h4>
+            <div style="margin-bottom:16px;">
+                <textarea id="comment-content" placeholder="댓글을 입력하세요" style="width:90%;height:50px"></textarea>
+                <button onclick="writeComment()" class="write-btn" style="width:80px; padding:8px 0; margin-left:5px;">등록</button>
+                <div class="msg" id="comment-msg"></div>
+            </div>
+            <div>${renderCommentList(commentTree)}</div>
+            `;
+                document.getElementById('comment-area').innerHTML = html;
+            });
+
+        console.log("comments accessToken = ", localStorage.getItem("accessToken"));
+
+    }
+
+    // 평탄화된 댓글리스트 → 계층구조 트리
+    function buildCommentTree(comments) {
+        const map = {};
+        comments.forEach(c => map[c.id] = { ...c, children: [] });
+        const tree = [];
+        comments.forEach(c => {
+            if (c.parentId) map[c.parentId]?.children.push(map[c.id]);
+            else tree.push(map[c.id]);
+        });
+        return tree;
+    }
+
+    // 댓글/대댓글 HTML 생성
+    function renderCommentList(list, depth = 0) {
+        if (!list || !list.length) return '';
+        const myUserId = localStorage.getItem("user_id");
+        let html = '';
+        list.forEach(c => {
+            html += `
+        <div style="margin-left:${depth*25}px; margin-bottom:7px; border-bottom:1px solid #eee;padding-bottom:6px;">
+            <b>${c.username}</b> <span style="color:#999;">${c.createdDate ? c.createdDate.substring(0,16) : ''}</span><br>
+            <span>${c.content}</span>
+            <div style="margin-top:3px;">
+                <button onclick="showReplyForm(${c.id}, '${c.username}', ${depth+1})" style="font-size:12px;background:#e0e8f5;border:none;padding:2px 10px;border-radius:10px;color:#4078c0;cursor:pointer;">답글</button>
+                ${c.userId == myUserId
+                ? `<button onclick="deleteComment(${c.id})" style="font-size:12px;background:#ffe0e0;border:none;padding:2px 10px;border-radius:10px;color:#d35400;cursor:pointer;margin-left:6px;">삭제</button>`
+                : ""}
+            </div>
+            <div id="reply-form-${c.id}"></div>
+            ${renderCommentList(c.children, depth + 1)}
+        </div>
+        `;
+        });
+        return html;
+    }
+
+    //댓글 삭제
+    function deleteComment(commentId) {
+        if (!confirm("댓글을 삭제하시겠습니까?")) return;
+        fetch(`/api/comments/${commentId}`, {
+            method: "DELETE"
+        })
+            .then(res => {
+                if (res.ok) {
+                    loadComments(currentBoardId); // 댓글 목록 갱신
+                } else {
+                    return res.text().then(msg => { throw new Error(msg); });
+                }
+            })
+            .catch(err => {
+                alert("댓글 삭제 실패: " + err.message);
+            });
+    }
+
+
+
+    // 댓글 등록
+    function writeComment(parentId) {
+        const boardId = currentBoardId;
+        const content = parentId
+            ? document.getElementById('reply-content-' + parentId).value
+            : document.getElementById('comment-content').value;
+        if (!content || content.trim().length === 0) {
+            document.getElementById(parentId ? 'reply-msg-' + parentId : 'comment-msg').innerHTML =
+                `<span class="error">내용을 입력하세요.</span>`;
+            return;
+        }
+        const username = localStorage.getItem("username") || "익명";
+        const userId = localStorage.getItem("user_id");
+        fetch('/api/comments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                boardId, username, content, userId,
+                parentId: parentId || null
+            })
+        })
+            .then(res => {
+                if (res.ok) return res.json();
+                return res.text().then(msg => { throw new Error(msg); });
+            })
+            .then(() => {
+                loadComments(boardId);
+            })
+            .catch(err => {
+                document.getElementById(parentId ? 'reply-msg-' + parentId : 'comment-msg').innerHTML =
+                    `<span class="error">등록 실패: ${err.message}</span>`;
+            });
+    }
+
+
+    // 대댓글 폼 보여주기
+    function showReplyForm(parentId, parentUsername, depth) {
+        document.getElementById('reply-form-' + parentId).innerHTML = `
+            <div style="margin-top:5px;">
+                <textarea id="reply-content-${parentId}" placeholder="@${parentUsername} 에게 답글" style="width:80%;height:35px;"></textarea>
+                <button onclick="writeComment(${parentId})" class="write-btn" style="width:60px;padding:5px 0;margin-left:4px;">등록</button>
+                <span class="msg" id="reply-msg-${parentId}" style="font-size:12px"></span>
+            </div>
+        `;
+    }
+
+
+
+    //페이징 영역
+    // 페이징 버튼
+    function renderPaging(pageData) {
+        const pagingDiv = document.getElementById('paging');
+        if (!pagingDiv) return;
+
+        const currentPage = pageData.number;
+        const totalPages = pageData.totalPages;
+
+        const groupSize = 10; // 10개씩 끊기
+        const currentGroup = Math.floor(currentPage / groupSize);
+        const start = currentGroup * groupSize;
+        const end = Math.min(start + groupSize, totalPages);
+
+        let html = '';
+
+        if (start > 0) {
+            html += `<button onclick="movePage(${start - 1})">이전</button>`;
+        }
+
+        for (let i = start; i < end; i++) {
+            html += `<button onclick="movePage(${i})"${i === currentPage ? ' style="font-weight:bold;color:red"' : ''}>${i + 1}</button>`;
+        }
+
+        if (end < totalPages) {
+            html += `<button onclick="movePage(${end})">다음</button>`;
+        }
+
+        pagingDiv.innerHTML = html;
+    }
+
+
+
+    function movePage(page) {
+        const keyword = document.getElementById('search').value;
+        if (keyword && keyword.trim().length > 0) {
+            searchPosts(page);
+        } else {
+            loadBoards(page);
+        }
+    }
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
-public class UserController {
+public class Controller {
 
     @Value("${PROJECT_NAME:web Server}")
     private String instansName;

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>내 정보수정</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f7f8fa; }
+        .container {
+            width: 350px; margin: 60px auto; background: #fff; padding: 38px 32px;
+            border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 18px;}
+        label { display: block; margin: 15px 0 5px 0; color: #444; }
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%; box-sizing: border-box; padding: 9px;
+            border: 1px solid #ccc; border-radius: 6px; font-size: 15px; margin-bottom: 2px;
+        }
+        button {
+            width: 100%; background: #4078c0; color: white; font-weight: bold;
+            border: none; border-radius: 6px; padding: 11px; margin-top: 22px;
+            font-size: 16px; cursor: pointer; transition: background 0.2s;
+        }
+        button:hover { background: #285690; }
+        .msg { margin-top: 16px; text-align: center; font-weight: bold;}
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; }
+        .back-btn { margin-top: 18px; background: #eee; color: #285690; }
+        .back-btn:hover { background: #e0e8f5; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>내 정보 수정</h2>
+    <form id="myinfo-form" autocomplete="off">
+        <label for="userid">아이디</label>
+        <input type="text" id="userid" name="userid" readonly>
+
+        <label for="username">이름</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="email">이메일</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="phone">전화번호</label>
+        <input type="text" id="phone" name="phone" required>
+
+        <label for="address">주소</label>
+        <input type="text" id="address" name="address" required>
+
+        <button type="submit">수정하기</button>
+    </form>
+    <button class="back-btn" onclick="location.href='main.html'">메인으로</button>
+    <div class="msg" id="msg"></div>
+</div>
+<script>
+    // 1. 내 정보 불러오기
+    const myUserId = localStorage.getItem("user_id");
+
+  //  fetch("/api/user/me", { //인증방식    <-- 이거말고 바꾼거 없음
+    fetch(`/api/user/me/${myUserId}`, {
+        credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+        headers: (localStorage.getItem("accessToken"))
+            ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+            : {}
+    })
+        .then(res => {
+            if (res.ok) return res.json();
+            if (res.status === 401) {
+                alert("로그인이 필요합니다.");
+                location.href = "index.html.html";
+                throw new Error("인증 필요");
+            }
+            return res.text().then(msg => { throw new Error(msg); });
+        })
+        .then(user => {
+            document.getElementById('userid').value = user.userid;
+            document.getElementById('username').value = user.profile?.username || "";
+            document.getElementById('email').value = user.profile?.email || "";
+            document.getElementById('phone').value = user.profile?.phone || "";
+            document.getElementById('address').value = user.profile?.address || "";
+        });
+
+    // 2. 정보수정 요청
+    document.getElementById('myinfo-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            profile: {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value
+            }
+        };
+      //  fetch(`/api/user/me`, { //인증 방식    <-- 이거말고 바꾼거 없음
+        fetch(`/api/user/me/${myUserId}`, {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+            method: 'PUT',
+            headers: Object.assign(
+                { "Content-Type": "application/json" },
+                (localStorage.getItem("accessToken")) ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") } : {}
+            ),
+            body: JSON.stringify(data)
+        })
+            .then(res => {
+                if(res.ok) return res.json();
+                if (res.status === 401) {
+                    alert("로그인이 필요합니다.");
+                    location.href = "index.html";
+                    throw new Error("인증 필요");
+                }
+                return res.text().then(msg => { throw new Error(msg); });
+            })
+            .then(user => {
+                document.getElementById('msg').innerHTML = `<span class="success">수정 완료</span>`;
+                setTimeout(() => {
+                    window.location.href = "main.html";
+                }, 700);
+            })
+            .catch(err => {
+                document.getElementById('msg').innerHTML = `<span class="error">수정 실패: ${err.message}</span>`;
+            });
+    });
+</script>
+</body>
+</html>
