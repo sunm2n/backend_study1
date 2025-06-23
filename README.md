@@ -64,3 +64,34 @@
 
 ---
 
+## 📅 4일차
+**AI 자동응답 기능 연동 및 WebSocket 프록시 문제 해결**
+
+### ✅ 주요 작업
+
+- `GPTService.java`를 통해 **OpenAI GPT-4.1 API** 연동 구현
+    - 클라이언트 메시지를 OpenAI API로 전송하고 응답을 다시 채팅방에 전송
+- Spring STOMP 채팅 흐름에 **AI 챗봇 자동응답 기능 추가**
+    - 메시지를 수신하면 GPT 응답을 자동으로 브로드캐스트
+- `HttpClient`를 사용해 OpenAI API 호출 및 JSON 응답 파싱 로직 작성
+
+### 🔐 보안 및 GitHub Push Protection 대응
+
+- 실수로 커밋된 **API Key 노출 문제 해결**
+    - GitHub Push Protection으로 인한 `GH013` 에러 발생
+    - 해당 API Key가 포함된 파일을 **삭제하고 커밋 내역을 정리**한 뒤 `--force push`로 재업로드
+
+### 🛠️ WebSocket 연결 문제 해결
+
+- Nginx에서 **WebSocket 연결 실패 및 프록시 문제** 디버깅
+    - `proxy_pass`, `Upgrade`, `Connection` 등 헤더를 재설정하여 WebSocket 정상 연결
+    - `/ws-chat` 경로의 WebSocket 요청이 백엔드로 올바르게 전달되도록 `nginx.conf` 수정
+- 브라우저 콘솔(F12) 및 `docker logs` 명령어를 통한 실시간 로그 확인
+
+### 🔍 결과 확인
+
+- 클라이언트가 일반 채팅 메시지를 보내면, GPT-4.1 응답이 자동으로 수신되어 실시간 전송됨
+- 브라우저에서 WebSocket 연결 및 AI 응답 동작 모두 정상 작동
+- 민감 정보가 GitHub에 포함되지 않도록 **토큰을 제거한 커밋으로 정리 완료**
+
+
