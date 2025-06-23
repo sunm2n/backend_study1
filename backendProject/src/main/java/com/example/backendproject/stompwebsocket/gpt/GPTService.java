@@ -28,7 +28,7 @@ public class GPTService {
         //http 요청 작성
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.openai.com/v1/responses"))
-                .header("Authorization", "Bearer " + System.getenv("OPENAI_API_KEY"))
+                .header("Authorization","")
                 .header("Content-Type","application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody))) //본문 삽입
                 .build();
