@@ -175,3 +175,54 @@ docker network create prod_server
 - 로그인 성공 후 세션을 통해 인증 상태 유지 가능
 
 ---
+
+---
+
+## 📅 6일차
+**게시판 기능 구현 (CRUD, 검색, 페이징) 및 대용량 배치 저장 처리**
+
+### ✅ 주요 작업
+
+- `Board` 엔티티 기반으로 **게시판 CRUD 기능** 구현
+  - **글쓰기**: `/boards`에 `POST` 요청으로 게시글 등록  
+    → `user_id`를 통해 작성자 `User`와 연관관계 설정
+  - **게시글 상세 조회**: `/boards/{id}` `GET` 요청
+  - **게시글 수정**: `/boards/{id}` `PUT` 요청
+  - **게시글 삭제**: `/boards/{id}` `DELETE` 요청
+- `Board`는 `User`와 다대일(`@ManyToOne`) 관계이며, 댓글(Comment)과는 일대다(`@OneToMany`)로 매핑됨
+- 모든 작업은 `BoardDTO`를 통해 클라이언트와 데이터 송수신 처리
+
+---
+
+### 🔍 검색 및 페이징 기능
+
+- **페이징된 전체 조회**:  
+  `/boards?page={번호}&size={개수}`로 요청 시 `Page<BoardDTO>` 응답  
+  → `findAllPaging(Pageable)` JPQL 사용
+- **키워드 검색**:  
+  `/boards/search?keyword={text}`로 제목 또는 내용에서 키워드 포함된 게시글 검색  
+  → `searchKeywordPaging(String, Pageable)` JPQL 사용  
+  → 대소문자 구분 없이 `LIKE` 검색 수행
+- **검색 + 페이징 동시 지원**
+
+---
+
+### 🧱 대용량 게시글 배치 저장
+
+- `BoardController`의 `/boards/batchInsert` API를 통해 `List<BoardDTO>` 단위로 MySQL에 배치 저장
+  - 내부적으로 `JdbcTemplate.batchUpdate()` 사용
+  - SQL 문: `INSERT INTO board (title, content, user_id, created_date, updated_date, batchkey) VALUES (?, ?, ?, ?, ?, ?)`
+  - 1000개 단위로 자른 후 반복 저장하며 `batchkey(UUID)`를 지정해 동일 배치 내 데이터 식별
+- `/boards/jpaBatchInsert` API는 `List<Board>`를 `EntityManager.persist()` 방식으로 저장
+  - 1000개마다 `flush()` 및 `clear()` 호출하여 메모리 사용량 제어
+
+---
+
+### 🔍 결과 확인
+
+- CRUD, 검색, 페이징 기능이 모두 정상 동작함
+- 수천 개의 게시글도 `/batchInsert`, `/jpaBatchInsert` API를 통해 안정적으로 저장됨
+- `username`, `user_id`, `created_date`, `updated_date` 정보가 `BoardDTO`에 포함되어 응답으로 제공됨
+
+---
+
