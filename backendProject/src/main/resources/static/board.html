@@ -132,32 +132,32 @@
 
     //페이징 적용후
     //페이징 적용
-    // function searchPosts(page = 0) {
-    //     const keyword = document.getElementById('search').value;
-    //     //fetchWithAuth(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}&sort=title,desc`,{ //정렬
-    //     fetch(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{  // jpa 검색
-    //     //fetchWithAuth(`/boards/elasticsearch?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{ //엘라스틱서치 검색
-    //
-    //     })
-    //         .then(res => res.json())
-    //         .then(list => {
-    //             console.log(list); // 여기에 바로 찍기
-    //
-    //             renderBoardList(list.content); // 아래 새 함수 이용
-    //             renderPaging(list);
-    //             currentPage = list.number;
-    //         });
-    // }
-
-    //페이징 적용전
-    function searchPosts() {
+    function searchPosts(page = 0) {
         const keyword = document.getElementById('search').value;
-        fetch('/boards/search?keyword=' + encodeURIComponent(keyword))
+        //fetchWithAuth(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}&sort=title,desc`,{ //정렬
+        fetch(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{  // jpa 검색
+        //fetchWithAuth(`/boards/elasticsearch?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{ //엘라스틱서치 검색
+
+        })
             .then(res => res.json())
             .then(list => {
-                renderBoardList(list); // 아래 새 함수 이용
+                console.log(list); // 여기에 바로 찍기
+
+                renderBoardList(list.content); // 아래 새 함수 이용
+                renderPaging(list);
+                currentPage = list.number;
             });
     }
+
+    //페이징 적용전
+    // function searchPosts() {
+    //     const keyword = document.getElementById('search').value;
+    //     fetch('/boards/search?keyword=' + encodeURIComponent(keyword))
+    //         .then(res => res.json())
+    //         .then(list => {
+    //             renderBoardList(list); // 아래 새 함수 이용
+    //         });
+    // }
 
 
 
@@ -185,49 +185,49 @@
     // ======= 게시글 목록 =======
 
     //페이징 적용후
-    // function loadBoards(page = 0) {
-    //     //fetchWithAuth(`/boards?page=${page}&size=${pageSize}&sort=title,desc`, { //정렬
-    //     fetch(`/boards?page=${page}&size=${pageSize}`, {
-    //         credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
-    //         headers: (localStorage.getItem("accessToken"))
-    //             ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
-    //             : {}
-    //     })
-    //         .then(res => res.json())
-    //         .then(list => {
-    //             renderBoardList(list.content); //page 객체
-    //             renderPaging(list);
-    //             currentPage = list.number;
-    //         })
-    //         .catch(err => {
-    //             alert("에러: " + err.message);
-    //         });
-    // }
-    // loadBoards(0)
+    function loadBoards(page = 0) {
+        //fetchWithAuth(`/boards?page=${page}&size=${pageSize}&sort=title,desc`, { //정렬
+        fetch(`/boards?page=${page}&size=${pageSize}`, {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+            headers: (localStorage.getItem("accessToken"))
+                ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+                : {}
+        })
+            .then(res => res.json())
+            .then(list => {
+                renderBoardList(list.content); //page 객체
+                renderPaging(list);
+                currentPage = list.number;
+            })
+            .catch(err => {
+                alert("에러: " + err.message);
+            });
+    }
+    loadBoards(0)
 
 
     // 페이징 적용 전
-    function loadBoards() {
-        //const myUserId = localStorage.getItem("userId"); // 내 userId (PK) 가져옴
-        fetch('/boards')
-            .then(res => res.json())
-            .then(list => {
-                let html = '';
-                list
-                    //.filter(b => String(b.userId) === String(myUserId)) // 내 글만 남김
-                    .forEach((b, idx) => {
-                        html += `<tr>
-                    <td>${b.id}</td>
-                    <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
-                    <td>${b.username || b.user_id}</td>
-                    <td>${b.createdDate ? b.createdDate.substring(0,10) : ''}</td>
-                </tr>`;
-                    });
-                // ★★★★★ 이 줄만 남기고 아래 한 줄만 실행!
-                document.getElementById('board-list-body').innerHTML = html;
-            });
-    }
-    loadBoards();
+    // function loadBoards() {
+    //     //const myUserId = localStorage.getItem("userId"); // 내 userId (PK) 가져옴
+    //     fetch('/boards')
+    //         .then(res => res.json())
+    //         .then(list => {
+    //             let html = '';
+    //             list
+    //                 //.filter(b => String(b.userId) === String(myUserId)) // 내 글만 남김
+    //                 .forEach((b, idx) => {
+    //                     html += `<tr>
+    //                 <td>${b.id}</td>
+    //                 <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
+    //                 <td>${b.username || b.user_id}</td>
+    //                 <td>${b.createdDate ? b.createdDate.substring(0,10) : ''}</td>
+    //             </tr>`;
+    //                 });
+    //             // ★★★★★ 이 줄만 남기고 아래 한 줄만 실행!
+    //             document.getElementById('board-list-body').innerHTML = html;
+    //         });
+    // }
+    // loadBoards();
 
 
 

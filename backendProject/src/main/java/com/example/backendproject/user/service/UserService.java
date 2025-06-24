@@ -1,20 +1,27 @@
 package com.example.backendproject.user.service;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import com.example.backendproject.user.dto.UserDTO;
 import com.example.backendproject.user.dto.UserProfileDTO;
 import com.example.backendproject.user.entity.User;
 import com.example.backendproject.user.entity.UserProfile;
+import com.example.backendproject.user.repository.UserProfilerRepository;
 import com.example.backendproject.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
 
+    private final EntityManager em;
+
+    private final UserRepository userRepository;
+    private final UserProfilerRepository userProfilerRepository;
     /** 내 정보 조회 **/
     @Transactional(readOnly = true)
     public UserDTO getMyInfo(Long id){
@@ -73,4 +80,58 @@ public class UserService {
         dto.setProfile(profileDTO);
         return dto;
     }
+
+
+    //아래는 순환참조가 되는  예제
+    public User getProfile2(Long profileId) {
+        UserProfile profile = userProfilerRepository.findById(profileId)
+                .orElseThrow(()->new RuntimeException("프로필 없음"));
+
+        return profile.getUser();
+    }
+
+
+    //dto로 순환참조 방지
+    public UserDTO getProfile(Long profileId)  {
+        UserProfile profile = userProfilerRepository.findById(profileId)
+                .orElseThrow(()->new RuntimeException("프로필 없음"));
+
+        User user =profile.getUser();
+        if (user==null) throw new RuntimeException("연결된 유저 없음");
+
+        UserProfileDTO profileDTO = new UserProfileDTO(
+                profile.getUsername(),
+                profile.getEmail(),
+                profile.getPhone(),
+                profile.getAddress()
+        );
+
+        UserDTO userDTO = new UserDTO(
+                user.getId(),
+                user.getUserid(),
+                profileDTO
+        );
+
+        return userDTO;
+    }
+
+
+
+    @Transactional
+    public void saveAllUsers(List<User> users) {
+        long start = System.currentTimeMillis();
+
+        for (int i = 0; i<users.size(); i++) {
+            em.persist(users.get(i));
+            if (i % 1000 == 0){
+                em.flush();
+                em.clear();
+            }
+        }
+
+        long end = System.currentTimeMillis();
+        System.out.println("JPA saveAll 저장 소요 시간(ms): " + (end - start));
+    }
+
+
 }
