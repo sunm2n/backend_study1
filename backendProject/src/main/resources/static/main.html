@@ -60,13 +60,6 @@
     const myUserId = localStorage.getItem("user_id");
 
 
-    fetch("/api/user/me/"+myUserId)
-        .then(res => res.json())
-        .then(user => {
-            localStorage.setItem("username", user.username);
-        });
-
-
 
     console.log("localStorage id = "+myUserId)
     console.log("params id = "+id)

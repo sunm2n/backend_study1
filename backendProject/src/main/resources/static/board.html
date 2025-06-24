@@ -40,11 +40,11 @@
 
     <h2>게시판</h2>
 
-<!--    <div id="search-area">-->
-<!--&lt;!&ndash;        <input type="text" id="search" placeholder="검색어 입력">&ndash;&gt;-->
-<!--       <input type="text" id="search" placeholder="검색어 입력" oninput="searchPosts(0)"> &lt;!&ndash;  입력하자마자 반응&ndash;&gt;-->
-<!--        <button onclick="searchPosts()">검색</button>-->
-<!--    </div>-->
+    <div id="search-area">
+<!--        <input type="text" id="search" placeholder="검색어 입력">-->
+       <input type="text" id="search" placeholder="검색어 입력" oninput="searchPosts(0)"> <!--  입력하자마자 반응-->
+        <button onclick="searchPosts()">검색</button>
+    </div>
 
     <!-- 게시글 목록 화면 -->
     <div id="list-area">
@@ -126,8 +126,87 @@
     let currentPage = 0;
     let pageSize = 10;
 
+    //은식추가
+    //은식추가    //은식추가
+    //은식추가
+
+    //페이징 적용후
+    //페이징 적용
+    // function searchPosts(page = 0) {
+    //     const keyword = document.getElementById('search').value;
+    //     //fetchWithAuth(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}&sort=title,desc`,{ //정렬
+    //     fetch(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{  // jpa 검색
+    //     //fetchWithAuth(`/boards/elasticsearch?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{ //엘라스틱서치 검색
+    //
+    //     })
+    //         .then(res => res.json())
+    //         .then(list => {
+    //             console.log(list); // 여기에 바로 찍기
+    //
+    //             renderBoardList(list.content); // 아래 새 함수 이용
+    //             renderPaging(list);
+    //             currentPage = list.number;
+    //         });
+    // }
+
+    //페이징 적용전
+    function searchPosts() {
+        const keyword = document.getElementById('search').value;
+        fetch('/boards/search?keyword=' + encodeURIComponent(keyword))
+            .then(res => res.json())
+            .then(list => {
+                renderBoardList(list); // 아래 새 함수 이용
+            });
+    }
+
+
+
+
+
+    // // 기존 목록 그리는 로직을 함수로 분리
+    function renderBoardList(list) {
+        let html = '';
+        list.forEach((b, idx) => {
+            html += `<tr>
+            <td>${b.id}</td>
+            <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
+            <td>${b.username || b.userId}</td>
+            <td>${b.created_date ? b.created_date.substring(0,10) : ''}</td>
+        </tr>`;
+        });
+        document.getElementById('board-list-body').innerHTML = html;
+    }
+
+    //은식추가
+    //은식추가
+
+
 
     // ======= 게시글 목록 =======
+
+    //페이징 적용후
+    // function loadBoards(page = 0) {
+    //     //fetchWithAuth(`/boards?page=${page}&size=${pageSize}&sort=title,desc`, { //정렬
+    //     fetch(`/boards?page=${page}&size=${pageSize}`, {
+    //         credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+    //         headers: (localStorage.getItem("accessToken"))
+    //             ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+    //             : {}
+    //     })
+    //         .then(res => res.json())
+    //         .then(list => {
+    //             renderBoardList(list.content); //page 객체
+    //             renderPaging(list);
+    //             currentPage = list.number;
+    //         })
+    //         .catch(err => {
+    //             alert("에러: " + err.message);
+    //         });
+    // }
+    // loadBoards(0)
+
+
+    // 페이징 적용 전
     function loadBoards() {
         //const myUserId = localStorage.getItem("userId"); // 내 userId (PK) 가져옴
         fetch('/boards')
@@ -148,15 +227,18 @@
                 document.getElementById('board-list-body').innerHTML = html;
             });
     }
-
     loadBoards();
+
+
+
+
 
     function showList() {
         document.getElementById('list-area').style.display = '';
         document.getElementById('write-area').style.display = 'none';
         document.getElementById('detail-area').style.display = 'none';
         document.getElementById('edit-area').style.display = 'none';
-    //    document.getElementById('search-area').style.display = ''; // ← 검색창 보이기
+        document.getElementById('search-area').style.display = ''; // ← 검색창 보이기
         loadBoards();
     }
 
@@ -165,7 +247,7 @@
         document.getElementById('write-area').style.display = '';
         document.getElementById('detail-area').style.display = 'none';
         document.getElementById('edit-area').style.display = 'none';
-     //   document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
+        document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
         document.getElementById('write-form').reset();
         document.getElementById('write-msg').innerHTML = '';
     }
@@ -180,7 +262,7 @@
         const data = {
             title: document.getElementById('title').value,
             content: document.getElementById('content').value,
-            userId: Number(userId)
+            user_id: Number(userId)
         };
         fetch('/boards', {
             method: 'POST',
@@ -219,7 +301,7 @@
                 document.getElementById('write-area').style.display = 'none';
                 document.getElementById('detail-area').style.display = '';
                 document.getElementById('edit-area').style.display = 'none';
-            //    document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
+                document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
                 const myUserId = localStorage.getItem("user_id");
                 if (String(board.user_id) === String(myUserId)) {
                     document.getElementById('edit-btn').style.display = '';
@@ -231,6 +313,7 @@
                 loadComments(board.id); // 댓글 로딩!
             });
     }
+
     function showEditForm() {
         fetch(`/boards/${currentBoardId}`)
             .then(res => res.json())
@@ -242,7 +325,7 @@
                 document.getElementById('detail-area').style.display = 'none';
                 document.getElementById('edit-area').style.display = '';
                 document.getElementById('edit-msg').innerHTML = '';
-               // document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
+                document.getElementById('search-area').style.display = 'none'; // ← 검색창 숨기기
             });
     }
     document.getElementById('edit-form').addEventListener('submit', function(e) {

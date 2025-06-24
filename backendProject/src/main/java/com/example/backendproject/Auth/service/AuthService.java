@@ -1,5 +1,6 @@
 package com.example.backendproject.Auth.service;
 
+import com.example.backendproject.user.dto.UserProfileDTO;
 import lombok.RequiredArgsConstructor;
 import com.example.backendproject.Auth.dto.LoginRequestDTO;
 import com.example.backendproject.Auth.dto.SignUpRequestDTO;
@@ -57,10 +58,13 @@ public class AuthService {
         userDTO.setId(user.getId());
         userDTO.setUserid(user.getUserid());
 
-        userDTO.setUsername(user.getUserProfile().getUsername());
-        userDTO.setEmail(user.getUserProfile().getEmail());
-        userDTO.setPhone(user.getUserProfile().getPhone());
-        userDTO.setAddress(user.getUserProfile().getAddress());
+
+        // 유저 프로필
+        UserProfileDTO profileDTO = new UserProfileDTO();
+        profileDTO.setUsername(user.getUserProfile().getUsername());
+        profileDTO.setEmail(user.getUserProfile().getEmail());
+        profileDTO.setPhone(user.getUserProfile().getPhone());
+        profileDTO.setAddress(user.getUserProfile().getAddress());
 
         return userDTO;
 
