@@ -1,5 +1,7 @@
 package com.example.backendproject.board.controller;
 
+import com.example.backendproject.security.core.CustomUserDetails;
+import com.example.backendproject.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +12,10 @@ import com.example.backendproject.board.service.BoardService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -20,19 +25,27 @@ import java.util.List;
 public class BoardController {
 
     private final BoardService boardService;
+    private final UserRepository userRepository;
 
 
     /** 글 작성 **/
     @PostMapping
-    public ResponseEntity<BoardDTO> createBoard(@RequestBody BoardDTO boardDTO) throws JsonProcessingException {
-        System.out.println("boardDTO 값 "+new ObjectMapper().writeValueAsString(boardDTO));
+    public ResponseEntity<BoardDTO> createBoard(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestBody BoardDTO boardDTO) {
+        Long id = customUserDetails.getId();
+        boardDTO.setUser_id(id);
         BoardDTO created = boardService.createBoard(boardDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /** 게시글 상세 조회 **/
     @GetMapping("/{id}")
-    public ResponseEntity<BoardDTO> getBoardDetail(@PathVariable Long id) {
+    public ResponseEntity<BoardDTO> getBoardDetail(@AuthenticationPrincipal CustomUserDetails customUserDetails,@PathVariable Long id) {
+//        Long userid = customUserDetails.getId();
+//        if(userRepository.findById(userid).isEmpty()) { // <- service 단으로
+//            throw new UsernameNotFoundException("해당 유저가 존재하지 않습니다.");
+//        }
         return ResponseEntity.ok(boardService.getBoardDetail(id));
     }
 

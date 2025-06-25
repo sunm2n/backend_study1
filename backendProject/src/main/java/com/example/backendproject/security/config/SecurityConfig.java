@@ -34,9 +34,10 @@ public class SecurityConfig {
                         .requestMatchers("/","/index.html", "/*.html", "/favicon.ico",
                                 "/css/**", "/fetchWithAuth.js","/js/**", "/images/**",
                                 "/.well-known/**").permitAll() // 정적 리소스 누구나 접근
-                        .requestMatchers("/boards/**",  "/boards").permitAll()
 
-                        .requestMatchers("/api/auth/**").permitAll() //인증이 필요한 경로
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // 인증이 필요한 경로
+                        .requestMatchers("/api/user/**", "/boards/**", "/api/comments/**").authenticated()
                 )
                 //인증 실패시 예외처리
                 .exceptionHandling(e ->e

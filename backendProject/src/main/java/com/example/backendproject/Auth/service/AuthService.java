@@ -104,5 +104,29 @@ public class AuthService {
 
     }
 
+    // 리프레시 토큰을 받아서 새로운 엑세스 토큰을 발급해주는 서비스
+    @Transactional
+    public String refreshToken(String refreshToken){
+        //리프레시 토큰 유효성 검사
+        if(jwtTokenProvider.validateToken(refreshToken)){
+            //DB에서 리프레시토큰을 가진 사용자가 있는지 확인
+            Auth auth = authRepository.findByRefreshToken(refreshToken).orElseThrow(
+                    ()->new IllegalArgumentException("해당 REFRESH_TOEKN 을 찾을 수 없습니다. \nREFRESH_TOEKN = " + refreshToken));
 
+            //있으면 인증객체를 만들어서 새로운 토큰 발급
+            String newAccessToken = jwtTokenProvider.generateToken(
+                    new UsernamePasswordAuthenticationToken(
+                            new CustomUserDetails(auth.getUser()), auth.getUser().getPassword()),jwtRefreshTokenExpirationTime); // 엑세스 토큰 만료시간으로 설정
+
+                    auth.setAccessToken(newAccessToken); // 토큰 업데이트
+                    authRepository.save(auth);
+
+                    return newAccessToken;
+        }
+
+    else {
+        throw new IllegalArgumentException("토큰이 유효하지 않습니다.");
+    }
+
+    }
 }
