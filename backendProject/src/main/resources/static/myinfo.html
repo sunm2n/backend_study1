@@ -52,12 +52,11 @@
     <button class="back-btn" onclick="location.href='main.html'">메인으로</button>
     <div class="msg" id="msg"></div>
 </div>
+<script src="fetchWithAuth.js"></script>
 <script>
     // 1. 내 정보 불러오기
     const myUserId = localStorage.getItem("user_id");
-
-  //  fetch("/api/user/me", { //인증방식    <-- 이거말고 바꾼거 없음
-    fetch(`/api/user/me/${myUserId}`, {
+    fetchWithAuth("/api/user/me", {
         credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
         headers: (localStorage.getItem("accessToken"))
             ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
@@ -91,8 +90,7 @@
                 address: document.getElementById('address').value
             }
         };
-      //  fetch(`/api/user/me`, { //인증 방식    <-- 이거말고 바꾼거 없음
-        fetch(`/api/user/me/${myUserId}`, {
+        fetchWithAuth(`/api/user/me`, { // 서버에서 /user/me PUT 지원시! 아니면 id로 바꿔도 됨
             credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
             method: 'PUT',
             headers: Object.assign(

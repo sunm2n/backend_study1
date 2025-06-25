@@ -120,74 +120,20 @@
 
 
 </div>
+<script src="fetchWithAuth.js"></script>
 <script>
     //게시글 검색
 
     let currentPage = 0;
     let pageSize = 10;
 
-    //은식추가
-    //은식추가    //은식추가
-    //은식추가
 
-    //페이징 적용후
     //페이징 적용
     function searchPosts(page = 0) {
         const keyword = document.getElementById('search').value;
         //fetchWithAuth(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}&sort=title,desc`,{ //정렬
-        fetch(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{  // jpa 검색
-        //fetchWithAuth(`/boards/elasticsearch?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{ //엘라스틱서치 검색
-
-        })
-            .then(res => res.json())
-            .then(list => {
-                console.log(list); // 여기에 바로 찍기
-
-                renderBoardList(list.content); // 아래 새 함수 이용
-                renderPaging(list);
-                currentPage = list.number;
-            });
-    }
-
-    //페이징 적용전
-    // function searchPosts() {
-    //     const keyword = document.getElementById('search').value;
-    //     fetch('/boards/search?keyword=' + encodeURIComponent(keyword))
-    //         .then(res => res.json())
-    //         .then(list => {
-    //             renderBoardList(list); // 아래 새 함수 이용
-    //         });
-    // }
-
-
-
-
-
-    // // 기존 목록 그리는 로직을 함수로 분리
-    function renderBoardList(list) {
-        let html = '';
-        list.forEach((b, idx) => {
-            html += `<tr>
-            <td>${b.id}</td>
-            <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
-            <td>${b.username || b.userId}</td>
-            <td>${b.created_date ? b.created_date.substring(0,10) : ''}</td>
-        </tr>`;
-        });
-        document.getElementById('board-list-body').innerHTML = html;
-    }
-
-    //은식추가
-    //은식추가
-
-
-
-    // ======= 게시글 목록 =======
-
-    //페이징 적용후
-    function loadBoards(page = 0) {
-        //fetchWithAuth(`/boards?page=${page}&size=${pageSize}&sort=title,desc`, { //정렬
-        fetch(`/boards?page=${page}&size=${pageSize}`, {
+      //  fetchWithAuth(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{  // jpa 검색
+        fetchWithAuth(`/boards/elasticsearch?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{ //엘라스틱서치 검색
             credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
             headers: (localStorage.getItem("accessToken"))
                 ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
@@ -195,7 +141,68 @@
         })
             .then(res => res.json())
             .then(list => {
-                renderBoardList(list.content); //page 객체
+                console.log(list); // 여기에 바로 찍기
+                renderBoardList(list.content || list); // 아래 새 함수 이용
+                renderPaging(list);
+                currentPage = list.number || 0;
+            });
+    }
+
+    //페이징 적용전
+    // function searchPosts() {
+    //     const keyword = document.getElementById('search').value;
+    //     fetchWithAuth('/boards/search?keyword=' + encodeURIComponent(keyword),{
+    //         credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+    //         headers: (localStorage.getItem("accessToken"))
+    //             ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+    //             : {}
+    //     })
+    //         .then(res => res.json())
+    //         .then(list => {
+    //             renderBoardList(list); // 아래 새 함수 이용
+    //         });
+    // }
+
+    // 기존 목록 그리는 로직을 함수로 분리
+    function renderBoardList(list) {
+        // list가 null/undefined거나 배열이 아닌 경우 (content 필드도 체크)
+        let posts = Array.isArray(list) ? list
+            : (list && Array.isArray(list.content)) ? list.content
+                : [];
+
+        if (!posts.length) {
+            document.getElementById('board-list-body').innerHTML = '<tr><td colspan="4" style="text-align:center;">게시글이 없습니다.</td></tr>';
+            return;
+        }
+
+
+        let html = '';
+        list.forEach((b, idx) => {
+            html += `<tr>
+            <td>${b.id}</td>
+            <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
+            <td>${b.username || b.user_id}</td>
+            <td>${b.created_date ? b.created_date.substring(0,10) : ''}</td>
+        </tr>`;
+        });
+        document.getElementById('board-list-body').innerHTML = html;
+    }
+
+
+    // ======= 게시글 목록 =======
+    //페이징 적용
+    function loadBoards(page = 0) {
+        //fetchWithAuth(`/boards?page=${page}&size=${pageSize}&sort=title,desc`, { //정렬
+        fetchWithAuth(`/boards?page=${page}&size=${pageSize}`, {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+            headers: (localStorage.getItem("accessToken"))
+                ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+                : {}
+        })
+            .then(res => res.json())
+            .then(list => {
+                console.log(list); // 여기에 바로 찍기
+                renderBoardList(list.content || list);  //page 객체
                 renderPaging(list);
                 currentPage = list.number;
             })
@@ -205,33 +212,24 @@
     }
     loadBoards(0)
 
-
-    // 페이징 적용 전
+    //페이징 적용 전
     // function loadBoards() {
-    //     //const myUserId = localStorage.getItem("userId"); // 내 userId (PK) 가져옴
-    //     fetch('/boards')
+    //     fetchWithAuth('/boards', {
+    //         credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+    //         headers: (localStorage.getItem("accessToken"))
+    //             ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+    //             : {}
+    //     })
     //         .then(res => res.json())
     //         .then(list => {
-    //             let html = '';
-    //             list
-    //                 //.filter(b => String(b.userId) === String(myUserId)) // 내 글만 남김
-    //                 .forEach((b, idx) => {
-    //                     html += `<tr>
-    //                 <td>${b.id}</td>
-    //                 <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
-    //                 <td>${b.username || b.user_id}</td>
-    //                 <td>${b.createdDate ? b.createdDate.substring(0,10) : ''}</td>
-    //             </tr>`;
-    //                 });
-    //             // ★★★★★ 이 줄만 남기고 아래 한 줄만 실행!
-    //             document.getElementById('board-list-body').innerHTML = html;
+    //             renderBoardList(list);
+    //
+    //         })
+    //         .catch(err => {
+    //             alert("에러: " + err.message);
     //         });
     // }
     // loadBoards();
-
-
-
-
 
     function showList() {
         document.getElementById('list-area').style.display = '';
@@ -262,11 +260,15 @@
         const data = {
             title: document.getElementById('title').value,
             content: document.getElementById('content').value,
-            user_id: Number(userId)
+            userId: Number(userId)
         };
-        fetch('/boards', {
+        fetchWithAuth('/boards', {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: Object.assign(
+                { 'Content-Type': 'application/json' },
+                (localStorage.getItem("accessToken")) ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") } : {}
+            ),
             body: JSON.stringify(data)
         })
             .then(res => {
@@ -284,16 +286,21 @@
     let currentBoardId = null;
     function showDetail(id) {
 
-        fetch(`/boards/${id}`)
+        fetchWithAuth(`/boards/${id}`, {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+            headers: (localStorage.getItem("accessToken"))
+                ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+                : {}
+        })
             .then(res => res.json())
             .then(board => {
                 currentBoardId = board.id;
                 document.getElementById('detail-title').textContent = board.title;
                 document.getElementById('detail-content').textContent = board.content;
-                document.getElementById('detail-writer').textContent = board.userId;
+                document.getElementById('detail-writer').textContent = board.user_id;
 
-                console.log("localStorage.getItem(userId) = ",localStorage.getItem("user_id"))
-                console.log("board.userId = ",board.user_id)
+                console.log("localStorage.getItem(user_id) = ",localStorage.getItem("user_id"))
+                console.log("board.user_id = ",board.user_id)
 
                 document.getElementById('detail-writer').textContent = board.username;
                 document.getElementById('detail-date').textContent = board.created_date ? board.created_date.substring(0,10) : '';
@@ -313,9 +320,13 @@
                 loadComments(board.id); // 댓글 로딩!
             });
     }
-
     function showEditForm() {
-        fetch(`/boards/${currentBoardId}`)
+        fetchWithAuth(`/boards/${currentBoardId}`, {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+            headers: (localStorage.getItem("accessToken"))
+                ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+                : {}
+        })
             .then(res => res.json())
             .then(board => {
                 document.getElementById('edit-title').value = board.title;
@@ -334,9 +345,13 @@
             title: document.getElementById('edit-title').value,
             content: document.getElementById('edit-content').value
         };
-        fetch(`/boards/${currentBoardId}`, {
+        fetchWithAuth(`/boards/${currentBoardId}`, {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
             method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
+            headers: Object.assign(
+                { 'Content-Type': 'application/json' },
+                (localStorage.getItem("accessToken")) ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") } : {}
+            ),
             body: JSON.stringify(data)
         })
             .then(res => {
@@ -352,7 +367,13 @@
     });
     function deleteBoard() {
         if(!confirm("정말 삭제하시겠습니까?")) return;
-        fetch(`/boards/${currentBoardId}`, { method: 'DELETE' })
+        fetchWithAuth(`/boards/${currentBoardId}`, {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+            method: 'DELETE',
+            headers: (localStorage.getItem("accessToken"))
+                ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+                : {}
+        })
             .then(res => {
                 if(res.ok) showList();
                 else return res.text().then(msg => { throw new Error(msg); });
@@ -367,7 +388,11 @@
 
     // 댓글 목록 로딩
     function loadComments(boardId) {
-        fetch(`/api/comments?boardId=${boardId}`)
+        fetchWithAuth(`/api/comments?boardId=${boardId}`, {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+            headers: (localStorage.getItem("accessToken"))
+                ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") } : {}
+        })
             .then(res => res.json())
             .then(list => {
                 const commentTree = buildCommentTree(list);
@@ -411,7 +436,7 @@
             <span>${c.content}</span>
             <div style="margin-top:3px;">
                 <button onclick="showReplyForm(${c.id}, '${c.username}', ${depth+1})" style="font-size:12px;background:#e0e8f5;border:none;padding:2px 10px;border-radius:10px;color:#4078c0;cursor:pointer;">답글</button>
-                ${c.userId == myUserId
+                ${c.user_id == myUserId
                 ? `<button onclick="deleteComment(${c.id})" style="font-size:12px;background:#ffe0e0;border:none;padding:2px 10px;border-radius:10px;color:#d35400;cursor:pointer;margin-left:6px;">삭제</button>`
                 : ""}
             </div>
@@ -426,8 +451,12 @@
     //댓글 삭제
     function deleteComment(commentId) {
         if (!confirm("댓글을 삭제하시겠습니까?")) return;
-        fetch(`/api/comments/${commentId}`, {
-            method: "DELETE"
+        fetchWithAuth(`/api/comments/${commentId}`, {
+            credentials: "include",
+            method: "DELETE",
+            headers: (localStorage.getItem("accessToken"))
+                ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+                : {}
         })
             .then(res => {
                 if (res.ok) {
@@ -456,13 +485,15 @@
         }
         const username = localStorage.getItem("username") || "익명";
         const userId = localStorage.getItem("user_id");
-        fetch('/api/comments', {
+        fetchWithAuth('/api/comments', {
+            credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: Object.assign(
+                { 'Content-Type': 'application/json' },
+                (localStorage.getItem("accessToken")) ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") } : {}
+            ),
             body: JSON.stringify({
-                boardId, username, content, userId,
+                boardId, username, content,userId,
                 parentId: parentId || null
             })
         })

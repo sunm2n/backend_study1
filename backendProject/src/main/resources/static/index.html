@@ -64,22 +64,40 @@
     <button type="button" onclick="location.href='/oauth2/authorization/google'">Google 로그인</button>
     <button type="button" onclick="location.href='/oauth2/authorization/kakao'">Kakao 로그인</button>
 
-
     <div class="msg" id="msg"></div>
 </div>
+<script src="fetchWithAuth.js"></script>
 <script>
 
-    // localStorage 클리어
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userId");
+    //sessionStorage 창 닫으면 모든 데이터 없어짐
+    //localStorage 직접 삭제해야 없어짐
+    // if (!sessionStorage.getItem('logoutOnce')) {
+    //     fetchWithAuth("/api/auth/logout", {
+    //         method: "POST",
+    //         credentials: "include" // 쿠키 같이 전송
+    //     })
+    //         .then(res => {
+    //             if(res.ok) {
+    //                 // localStorage도 싹 정리!
+    //                 localStorage.removeItem("accessToken");
+    //                 localStorage.removeItem("refreshToken");
+    //                 localStorage.removeItem("username");
+    //                 localStorage.removeItem("user_id");
+    //                 sessionStorage.setItem('logoutOnce', 'true'); // 이제 다시 안 함!
+    //                 // 홈으로 이동 등
+    //                 location.href = "index.html";
+    //             } else {
+    //                 alert("로그아웃 실패");
+    //             }
+    //         });
+    // }
+
 
     document.getElementById('login-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const userid = document.getElementById('userid').value;
         const password = document.getElementById('password').value;
-        fetch('/api/auth/login', {
-     //   fetch('/api/auth/loginSecurity', { //인증 방식   <-- 이거말고 바꾼거 없음
+        fetch('/api/auth/loginSecurity', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userid, password })
@@ -89,12 +107,8 @@
                 return res.text().then(msg => { throw new Error(msg); });
             })
             .then(user => {
-                // user: { id, userid, username, ... }
-                // ★ PK 저장! localStorage/sessionStorage 활용
-                localStorage.setItem("user_id", user.id);
-                localStorage.setItem("username", user.username);
                 localStorage.setItem("accessToken", user.accessToken);
-                // 필요하면 다른 정보도 저장
+                localStorage.setItem("refreshToken", user.refreshToken);
 
                 document.getElementById('msg').innerHTML = `<span class="success">로그인 성공</span>`;
                 setTimeout(() => {

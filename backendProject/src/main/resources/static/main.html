@@ -35,46 +35,80 @@
     <button class="main-btn" onclick="location.href='myinfo.html'">내 정보수정</button>
     <button class="main-btn" onclick="location.href='board.html'">게시판</button>
     <button class="main-btn" onclick="location.href='gpt.html'">GPT AI 챗봇</button>
-    <button class="main-btn" onclick="location.href='stompchat2.html'">실시간 채팅방</button>
+    <button class="main-btn" onclick="location.href='websocket.html'">실시간 채팅방</button>
 </div>
 
 
-
+<script src="fetchWithAuth.js"></script>
 <script>
     // URL 쿼리스트링에서 accessToken, refreshToken, 기타 정보 추출
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    const accessToken = getCookie("accessToken");
+
     const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get('accessToken');
-    const refreshToken = params.get('refreshToken');
     const id = params.get('id');
+
 
     if (accessToken) {
         localStorage.setItem("accessToken", accessToken);
-    }
-    if (refreshToken) {
-        localStorage.setItem("refreshToken", refreshToken);
-    }
-    if (id) {
-        localStorage.setItem("user_id", id);
+        // 쿠키에서 accessToken 제거 (보안상)
+        document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     }
 
-    const myUserId = localStorage.getItem("user_id");
 
+    const userId = localStorage.getItem("user_id");
+    //id 값으로 username 받아오기
+    fetchWithAuth("/api/user/me", {
+        credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
+        headers: (localStorage.getItem("accessToken"))
+            ? { "Authorization": "Bearer " + localStorage.getItem("accessToken") }
+            : {}
+    })
+        .then(res => res.json())
+        .then(user => {
+            localStorage.setItem("username", user.username);
+            localStorage.setItem("user_id", user.id);
+        });
 
-
-    console.log("localStorage id = "+myUserId)
-    console.log("params id = "+id)
 
     document.getElementById('logout-btn').onclick = function() {
+
+        // 쿠키 삭제 accessToken, refreshToken 모두 삭제
+        function deleteCookie(name) {
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        }
+        deleteCookie("accessToken");
+        deleteCookie("refreshToken");
+
         // localStorage 클리어
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user_id");
+        localStorage.removeItem("username");
+        localStorage.removeItem("userId");
+        localStorage.clear();
 
         // 로그아웃 서버 요청(POST)
-        fetch('/logout', { method: 'POST', credentials: 'include' })
-            .then(() => {
-                // 메인/로그인 페이지로 이동
-                location.href = "index.html";
+        fetchWithAuth("/api/auth/logout", {
+            method: "POST",
+            credentials: "include" // 쿠키 같이 전송
+        })
+            .then(res => {
+                if(res.ok) {
+                    // localStorage도 싹 정리!
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
+                    localStorage.removeItem("username");
+                    localStorage.removeItem("userId");
+                    // 홈으로 이동 등
+                    location.href = "index.html";
+                } else {
+                    alert("로그아웃 실패");
+                }
             });
     };
 

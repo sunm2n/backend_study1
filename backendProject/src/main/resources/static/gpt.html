@@ -54,7 +54,7 @@
 </head>
 <body>
 <div class="container">
-    <h2>GPT와 함께하는 AI 챗봇</h2>
+    <h2>GPT Chat Room</h2>
     <form id="roomForm">
         <label>방 이름</label>
         <input type="text" id="roomInput" required autocomplete="off">
@@ -76,21 +76,22 @@
 
 <!-- SockJS, Stomp.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="fetchWithAuth.js"></script>
 <script>
     let stompClient = null;
     let roomName = "";
     let myName = "";
 
     function connectToRoom(room, nick) {
-        //  const socket = new WebSocket('ws://localhost:8080/ws-gpt'); //로컬 테스트용
-        const socket = new WebSocket('/ws-gpt'); //도커 배포용
+      //  const socket = new WebSocket('ws://localhost:8080/ws-gpt'); //로컬 테스트용
+        const socket = new WebSocket('ws://localhost/ws-gpt'); //도커 배포용
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, function (frame) {
             document.getElementById('chatSection').style.display = '';
             document.getElementById('roomForm').style.display = 'none';
 
-            stompClient.subscribe('/topic/gpt', function (msg) {
+            stompClient.subscribe('/topic/room/' + room, function (msg) {
                 const data = JSON.parse(msg.body);
                 showMessage(data.from, data.message);
             });
@@ -129,7 +130,7 @@
         const input = document.getElementById('messageInput');
         const msg = input.value.trim();
         if (msg && stompClient && roomName) {
-            stompClient.send('/app/gpt', {}, JSON.stringify({from: myName, message: msg}));
+            stompClient.send('/app/gpt/message/' + roomName, {}, JSON.stringify({from: myName, message: msg}));
             input.value = '';
         }
     };
