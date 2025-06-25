@@ -42,7 +42,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getUserProfile().getUsername(); // User 엔티티와 참조되어있는 UserProfile에 있는 username 반환
+        return user.getUserid(); // User 엔티티와 참조되어있는 UserProfile에 있는 username 반환
     }
 
 
