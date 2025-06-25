@@ -144,7 +144,7 @@ public class BoardService {
         for (int i = 0; i < boardDTOList.size(); i+=batchsize) { //i는 1000씩 증가
             //전체 데이터를 1000개씩 잘라서 배치리스트에 담습니다.
 
-            int end = Math.min(boardDTOList.size(), i+batchsize); //두개의 숫자중에 작은 숫자를 반황ㄴ
+            int end = Math.min(boardDTOList.size(), i+batchsize); //두개의 숫자중에 작은 숫자를 반환
             List<BoardDTO> batchList = boardDTOList.subList(i, end);
 
             //전체 데이터에서 1000씩 작업을 하는데 마지막 데이터가 1000개가 안될수도있으니
