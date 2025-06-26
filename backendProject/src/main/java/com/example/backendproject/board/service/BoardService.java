@@ -78,33 +78,21 @@ public class BoardService {
 
     /** 게시글 삭제 **/
     @Transactional
-    public void deleteBoard(Long boardId) {
+    public void deleteBoard(Long userid,Long boardId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(()-> new IllegalArgumentException("사용자 정보가 없습니다"));
+
+        if (!board.getUser().getId().equals(userid))
+            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+
         if (!boardRepository.existsById(boardId))
             throw new IllegalArgumentException("게시글 없음: " + boardId);
+
         boardRepository.deleteById(boardId);
     }
 
 
-    /** 페이징 적용 전 **/
-    /** 페이징 적용 전 **/
-    /** 페이징 적용 전 **/
-    // 게시글 전체 목록
-    @Transactional(readOnly = true)
-    public List<BoardDTO> getBoardList() {
-        return boardRepository.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
-    // 게시글 검색  페이징 아님
-    public List<BoardDTO> searchBoards(String keyword) {
-        return boardRepository.searchKeyword(keyword);
-    }
 
-
-
-
-    /** 페이징 적용 후 **/
-    /** 페이징 적용 후 **/
     /** 페이징 적용 후 **/
     //페이징 전체 목록
     public Page<BoardDTO> getBoards(int page, int size) {
@@ -144,7 +132,7 @@ public class BoardService {
         for (int i = 0; i < boardDTOList.size(); i+=batchsize) { //i는 1000씩 증가
             //전체 데이터를 1000개씩 잘라서 배치리스트에 담습니다.
 
-            int end = Math.min(boardDTOList.size(), i+batchsize); //두개의 숫자중에 작은 숫자를 반환
+            int end = Math.min(boardDTOList.size(), i+batchsize); //두개의 숫자중에 작은 숫자를 반황ㄴ
             List<BoardDTO> batchList = boardDTOList.subList(i, end);
 
             //전체 데이터에서 1000씩 작업을 하는데 마지막 데이터가 1000개가 안될수도있으니
