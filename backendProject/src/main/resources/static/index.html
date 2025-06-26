@@ -71,33 +71,33 @@
 
     //sessionStorage 창 닫으면 모든 데이터 없어짐
     //localStorage 직접 삭제해야 없어짐
-    // if (!sessionStorage.getItem('logoutOnce')) {
-    //     fetchWithAuth("/api/auth/logout", {
-    //         method: "POST",
-    //         credentials: "include" // 쿠키 같이 전송
-    //     })
-    //         .then(res => {
-    //             if(res.ok) {
-    //                 // localStorage도 싹 정리!
-    //                 localStorage.removeItem("accessToken");
-    //                 localStorage.removeItem("refreshToken");
-    //                 localStorage.removeItem("username");
-    //                 localStorage.removeItem("user_id");
-    //                 sessionStorage.setItem('logoutOnce', 'true'); // 이제 다시 안 함!
-    //                 // 홈으로 이동 등
-    //                 location.href = "index.html";
-    //             } else {
-    //                 alert("로그아웃 실패");
-    //             }
-    //         });
-    // }
+    if (!sessionStorage.getItem('logoutOnce')) {
+        fetchWithAuth("/api/auth/logout", {
+            method: "POST",
+            credentials: "include" // 쿠키 같이 전송
+        })
+            .then(res => {
+                if(res.ok) {
+                    // localStorage도 싹 정리!
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
+                    localStorage.removeItem("username");
+                    localStorage.removeItem("user_id");
+                    sessionStorage.setItem('logoutOnce', 'true'); // 이제 다시 안 함!
+                    // 홈으로 이동 등
+                    location.href = "index.html";
+                } else {
+                    alert("로그아웃 실패");
+                }
+            });
+    }
 
 
     document.getElementById('login-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const userid = document.getElementById('userid').value;
         const password = document.getElementById('password').value;
-        fetch('/api/auth/loginSecurity', {
+        fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userid, password })

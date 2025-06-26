@@ -50,8 +50,8 @@ public class BoardController {
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @PathVariable Long id,
             @RequestBody BoardDTO boardDTO) {
-        Long userig = customUserDetails.getId();
-        if (userig.equals(boardDTO.getUser_id())) {
+        Long userid = customUserDetails.getId();
+        if (userid.equals(boardDTO.getUser_id())) {
             //내가 쓴글이면 수정
             return ResponseEntity.ok(boardService.updateBoard(id, boardDTO));
         }
@@ -71,30 +71,10 @@ public class BoardController {
     }
 
 
-
-
-    //페이징 적용 전
-//    @GetMapping
-//    public ResponseEntity<List<BoardDTO>> getBoardList() {
-//        return ResponseEntity.ok(boardService.getBoardList());
-//    }
-//
-//    //페이징 적용 전
-//    @GetMapping("/search")
-//    public List<BoardDTO> search(@RequestParam String keyword) {
-//        return boardService.searchBoards(keyword);
-//    }
-//
-
-
-
-    /** 페이징 적용 **/
-    /** 페이징 적용 **/
-    /** 페이징 적용 **/
     /** 페이징 적용 **/
     //페이징 적용 전체 목록보기
     //기본값은 0페이지 첫페이지입니다 페이지랑 10개 데이터를 불러옴
-    @GetMapping("/all")
+    @GetMapping
     public Page<BoardDTO> getBoards(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
