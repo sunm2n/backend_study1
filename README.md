@@ -226,3 +226,43 @@ docker network create prod_server
 
 ---
 
+---
+
+## 📅 8일차
+**Spring Security + JWT 기반 인증 시스템 적용 및 게시판 권한 연동**
+
+### ✅ 주요 작업
+
+- 기존 단순 로그인 방식을 **Spring Security 기반 구조로 전환**
+- 로그인 시 **Access Token / Refresh Token** 발급 및 DB(`auth` 테이블)에 저장
+  - Access Token: 짧은 유효시간의 인증 토큰
+  - Refresh Token: 재발급을 위한 장기 토큰 (쿠키 or Authorization 헤더에서 수신)
+- JWT 토큰은 `JwtTokenProvider`에서 생성/검증하며, `JwtTokenFilter`에서 요청마다 인증 수행
+
+### 🔐 인증 처리 흐름
+
+- 사용자는 `/api/auth/loginSecurity`로 로그인 요청  
+  → 유효한 경우 JWT 토큰 발급 및 응답
+- 이후 클라이언트는 요청 시 `Authorization: Bearer <access_token>` 헤더 포함
+- 백엔드는 `JwtTokenFilter`를 통해 토큰을 검증하고 `SecurityContext`에 사용자 정보 저장
+
+### 🧩 게시판 기능에 JWT 인증 연동
+
+- 게시글 작성 시 `@AuthenticationPrincipal`을 통해 현재 로그인한 사용자 정보를 획득  
+  → 해당 사용자의 `user_id`를 자동으로 게시글에 연관 설정
+- 토큰 없이 게시글 작성 시 `403 Forbidden` 응답
+
+### 🔄 토큰 갱신 기능 추가
+
+- `/api/auth/refresh` 엔드포인트로 Refresh Token 전달 시, 새 Access Token 발급
+- Refresh Token은 쿠키 또는 `Authorization` 헤더에서 자동 추출됨
+- 유효성 검사 후 새로운 토큰으로 갱신 및 `auth` 테이블 업데이트
+
+---
+
+### 🔍 결과 확인
+
+- JWT 기반 로그인/인증 흐름이 정상 작동하며, 모든 요청에서 `SecurityContext`를 통해 사용자 정보 활용 가능
+- 게시판 글 작성 시 현재 로그인한 사용자의 ID가 자동 연결됨
+- 로그인 후 토큰 없이 요청 시 접근 차단(403) 확인 완료
+- Refresh Token을 통한 Access Token 갱신 기능 정상 작동
