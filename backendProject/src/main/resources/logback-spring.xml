@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+
+<!--    로그 파일이 저장될 경로 변수-->
+    <property
+            name="LOG_PATH"
+            value="logs"
+    />
+
+
+
+    <!-- 파일 로그 출력 패턴: 색상 X (ELK 연동용) -->
+    <property
+            name="FILE_PATTERN"
+            value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-3level] %logger{5} - %msg%n"
+    />
+
+    <!-- 운영 환경(prod) 전용 로그 설정 -->
+    <!-- 콘솔 출력 없이 파일(app.log)에만 로그가 기록됨  -->
+<!--    <springProfile name="prod">-->
+<!--        <root level="INFO">-->
+<!--            <appender-ref ref="FILE"/>-->
+<!--        </root>-->
+<!--    </springProfile>-->
+
+    <!-- ==========================
+         파일 로그 설정 (ELK 연동용)
+         ========================== -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">  <!-- RollingFileAppender: 로그를 파일로 남김, 일자별로 파일 자동 분할 -->
+        <file>${LOG_PATH}/app.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/app-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>10</maxHistory>  <!-- : 10일치까지만 파일 보관(자동 삭제) -->
+        </rollingPolicy>
+        <encoder>
+            <Pattern>${FILE_PATTERN}</Pattern>
+        </encoder>
+    </appender>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- ==========================
+         콘솔(터미널) 로그 설정
+         ========================== -->
+
+    <!-- 콘솔(터미널) 출력 패턴: 색상 O -->
+    <!--
+         thread <- 현재 로그를 찍은 스레드 이름
+         level <- 로그 레벨  (INFO, WARN, ERROR)
+         logger <- 로그를 찍은 클래스의 이름
+         msg  <- 로그 메세지
+     -->
+
+    <!-- 콘솔(터미널)에 출력할 때 사용할 패턴 (색상 적용) -->
+    <property
+            name="CONSOLE_PATTERN"
+            value="%d{yyyy-MM-dd HH:mm:ss.SSS} %magenta([%thread]) %highlight([%-3level]) %logger{5} - %msg %n"
+    />
+
+    <!-- 개발 환경(dev) 전용 로그 설정 -->
+    <!-- 파일로 로그 기록 없이, 콘솔(터미널)에만 로그 출력 -->
+<!--    <springProfile name="dev">-->
+<!--        <root level="DEBUG">-->
+<!--            <appender-ref ref="STDOUT"/>  &lt;!&ndash; STDOUT 이름을 가진 appender로 로그 전송 &ndash;&gt;-->
+<!--        </root>-->
+<!--    </springProfile>-->
+
+
+
+    <!-- 터미널에 출력하는 Appender 설정 (STDOUT) -->
+    <appender
+            name="STDOUT"
+            class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>${CONSOLE_PATTERN}</Pattern>
+        </encoder>
+    </appender>
+
+    <!-- 콘솔 로그 비동기 처리(성능 최적화, 버퍼링)
+          아래 ASYNC는 위 STDOUT 출력을 비동기로 최적화(성능 향상) -->
+
+    <appender
+            name="ASYNC"
+            class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="STDOUT"/>
+    </appender>
+
+
+
+    <!-- ==========================
+             패키지별 로그 레벨 지정
+         ========================== -->
+    <!--(INFO, WARN, ERROR도 모두 출력)-->
+    <!-- 특정 패키지(여기서는 org.boot.backend5project)만 따로 레벨 지정 가능
+         additive="false"면, 해당 패키지 로그는 상위(root)에 전달되지 않음 -->
+    <logger
+            name="org.boot.backend5project"
+            level="DEBUG"
+            additive="false" >
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+
+
+    <!-- ==========================
+         전체(Global) 로그 설정
+         ========================== -->
+
+<!--    <root level="DEBUG">-->
+<!--    <root level="TRACE">-->
+<!--    <root level="INFO">-->
+    <root level="INFO">
+        <appender-ref ref="ASYNC"/> <!-- 콘솔(터미널) 로그 비동기 처리 -->
+        <appender-ref ref="FILE"/>  <!-- 파일 로그(ELK 연동) -->
+    </root>
+
+    <!-- 로그 하나가 발생하면, 콘솔에도 찍히고 파일에도 기록됨(동시) -->
+
+
+    <!--
+        참고: springProfile 태그를 쓰면
+        <springProfile name="prod">,
+        <springProfile name="dev">
+        환경별로 다른 로그정책 적용 가능
+        -->
+
+</configuration>

@@ -24,6 +24,7 @@ public class RedisOAuth2AuthorizationRequestRepository implements AuthorizationR
 //    }
 
 
+    //인가 요청 불러오는 메서드
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         // 요청 파라미터에서 state 값을 가져옴 (OAuth2의 CSRF 방지 토큰 역할)
@@ -36,6 +37,7 @@ public class RedisOAuth2AuthorizationRequestRepository implements AuthorizationR
 
 
 
+    //완료된 인가 요청 저장
     @Override
     public void saveAuthorizationRequest(
             OAuth2AuthorizationRequest authorizationRequest,
@@ -51,7 +53,7 @@ public class RedisOAuth2AuthorizationRequestRepository implements AuthorizationR
                 PREFIX +
                         state,
                 authorizationRequest,
-                Duration.ofMinutes(10));
+                Duration.ofMinutes(10)); //인증된 정보를 10분동안 유지
 
     }
 

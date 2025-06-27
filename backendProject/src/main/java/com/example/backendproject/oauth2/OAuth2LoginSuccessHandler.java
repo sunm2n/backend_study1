@@ -20,24 +20,25 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
+    //로그인 동작을 커스텀으로 구현하고 싶을 떄 사용하는 인터페이스
 
+
+    //OAuth2 로그인 성공시 호출되는 메서드
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication)
             throws IOException, ServletException {
 
-
         DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
 
         Map<String, Object> attributes = oAuth2User.getAttributes();
-
 
         String accessToken = (String) attributes.get("accessToken");
         String refreshToken = (String) attributes.get("refreshToken");
         String name = (String) attributes.get("name");
 
-        System.out.println("[OAuth2_LOG]" + "소셯 로그인 시도한 이름 = "+name);
+        System.out.println("[OAuth2_LOG]" + "소셜 로그인 시도한 이름 = "+name);
 
         // 사용자 ID를 안전하게 꺼내기 (null 체크 및 타입 캐스팅)
         Long id = null;
@@ -46,7 +47,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             // Long 타입이 아닐 수도 있으니 안전하게 변환
             id = Long.valueOf(idObj.toString());
         }
-
 
         //토큰 전달방식
         // 또는, 보안을 강화하려면 아래처럼 HttpOnly 쿠키로 전달해도 됨

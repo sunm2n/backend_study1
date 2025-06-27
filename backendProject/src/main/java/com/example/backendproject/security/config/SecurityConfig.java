@@ -98,10 +98,10 @@ public class SecurityConfig {
                         .loginPage("/index.html")
                         .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
                         .successHandler(oAuth2LoginSuccessHandler)
-
                         .authorizationEndpoint(authorization -> authorization
                                 .authorizationRequestRepository(authorizationRequestRepository()))
                 )
+
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessHandler(oAuth2LogoutSuccessHandler)

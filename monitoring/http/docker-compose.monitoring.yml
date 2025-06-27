@@ -1,0 +1,89 @@
+services:
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml # [설정파일]
+      - ./volumes/prometheus:/prometheus          # [데이터 볼륨]
+#    depends_on:
+#      - backend1
+#      - backend2
+#      - backend3
+    networks:
+      - prod_server
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - ./volumes/grafana:/var/lib/grafana  # [데이터 볼륨]
+    networks:
+      - prod_server
+#
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+#    container_name: elasticsearch
+#    environment:
+#      - node.name=es01
+#      - discovery.type=single-node
+#      - xpack.security.enabled=false
+#    ulimits:
+#      memlock:
+#        soft: -1
+#        hard: -1
+#    ports:
+#      - "9200:9200"
+#      - "9300:9300"
+#    volumes:
+#      - ./volumes/esdata:/usr/share/elasticsearch/data
+#    networks:
+#      - prod_server
+##
+##
+##  kibana:
+##    image: docker.elastic.co/kibana/kibana:8.12.0
+##    container_name: kibana
+##    environment:
+##      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+##      - SERVER_SSL_ENABLED=false
+##    ports:
+##      - "5601:5601"
+##    volumes:
+##      - ./volumes/kibana-data:/usr/share/kibana/data
+##    depends_on:
+##      - elasticsearch
+##    networks:
+##      - prod_server
+##
+##  logstash:
+##    image: docker.elastic.co/logstash/logstash:8.12.0
+##    container_name: logstash
+##    ports:
+##      - "5044:5044"  # For beats (optional)
+##      - "5000:5000"  # TCP input
+##    volumes:
+##      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf #logstash 설정파일
+##      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro  # <-- 이 줄 추가!
+##      - ../../logs:/logs #로그 볼륨
+##    depends_on:
+##      - elasticsearch
+##    networks:
+##      - prod_server
+
+
+networks:
+  prod_server:
+    external: true
+
+#도커 자체 볼륨을 사용할떄 선언해야 함
+#volumes:
+#  volumes:

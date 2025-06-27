@@ -23,11 +23,10 @@ public class JwtTokenProvider {
         //현재 로그인한 사용자의 정보를 꺼냄
         CustomUserDetails  customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         Date expiryDate = new Date(new Date().getTime() + expirationMillis); //토큰 만료시간 생성 (밀리초 단위까지)
-
+        //payload
         Claims claims = Jwts.claims();
         claims.put("user-id",customUserDetails.getId());
         claims.put("username",customUserDetails.getUsername());
-
 
         return Jwts.builder()
                 .setSubject(customUserDetails.getUsername())//이 JWT 토큰의 주체를 지정
@@ -80,5 +79,11 @@ public class JwtTokenProvider {
             return false;
         }
     }
+
+    /**
+     * JwtTokenProvider는 generateToken(Authentication, expirationMillis) 메서드만 제공하고 있고
+     * 우리가 소셜 로그인에서는 Authentication 객체 없이 userId, username만으로 직접 토큰을 만들고자 하니까
+     * 아래 두 가지 메서드를 추가
+     */
 
 }

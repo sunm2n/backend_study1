@@ -4,14 +4,18 @@ package com.example.backendproject.stompwebsocket.controller;
 import com.example.backendproject.stompwebsocket.gpt.GPTService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import com.example.backendproject.stompwebsocket.dto.ChatMessage;
 import com.example.backendproject.stompwebsocket.redis.RedisPublisher;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
 @RequiredArgsConstructor
@@ -72,6 +76,26 @@ public class ChatController {
         redisPublisher.publish(channel,msg);
 
 
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        // accessToken 쿠키 삭제
+        Cookie accessTokenCookie = new Cookie("accessToken", null);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setPath("/");
+        accessTokenCookie.setMaxAge(0); // 즉시 만료!
+        // refreshToken 쿠키 삭제
+        Cookie refreshTokenCookie = new Cookie("refreshToken", null);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(0);
+        // 응답에 쿠키 삭제 포함
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
+        // (추가) 서버 세션도 있다면 만료
+        // request.getSession().invalidate();
+        return ResponseEntity.ok().body("로그아웃 완료 (쿠키 삭제됨)");
     }
 
 }

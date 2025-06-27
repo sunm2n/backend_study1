@@ -109,10 +109,11 @@ public class AuthService {
     public String refreshToken(String refreshToken){
         //리프레시 토큰 유효성 검사
         if(jwtTokenProvider.validateToken(refreshToken)){
+            System.out.println("111111111111");
             //DB에서 리프레시토큰을 가진 사용자가 있는지 확인
             Auth auth = authRepository.findByRefreshToken(refreshToken).orElseThrow(
                     ()->new IllegalArgumentException("해당 REFRESH_TOEKN 을 찾을 수 없습니다. \nREFRESH_TOEKN = " + refreshToken));
-
+            System.out.println("2222222222222");
             //있으면 인증객체를 만들어서 새로운 토큰 발급
             String newAccessToken = jwtTokenProvider.generateToken(
                     new UsernamePasswordAuthenticationToken(
@@ -120,7 +121,7 @@ public class AuthService {
 
                     auth.setAccessToken(newAccessToken); // 토큰 업데이트
                     authRepository.save(auth);
-
+            System.out.println("3333333333333333333");
                     return newAccessToken;
         }
 
@@ -129,4 +130,9 @@ public class AuthService {
     }
 
     }
+
+
+
+
+
 }
