@@ -1,9 +1,9 @@
 package com.example.backendproject.comment.service;
 
-import com.example.backendproject.comment.dto.CommentDTO;
 import lombok.RequiredArgsConstructor;
 import com.example.backendproject.board.entity.Board;
 import com.example.backendproject.board.repository.BoardRepository;
+import com.example.backendproject.comment.dto.CommentDTO;
 import com.example.backendproject.comment.entity.Comment;
 import com.example.backendproject.comment.repository.CommentRepository;
 import com.example.backendproject.user.entity.User;

@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 .requestMatchers("/","/index.html", "/*.html", "/favicon.ico",
                                         "/css/**", "/fetchWithAuth.js","/js/**", "/images/**",
                                         "/.well-known/**").permitAll() // 정적 리소스 누구나 접근
+
                                 .requestMatchers("/boards/**",  "/boards","/api/comments/**").authenticated()
 
                                 //인증필요

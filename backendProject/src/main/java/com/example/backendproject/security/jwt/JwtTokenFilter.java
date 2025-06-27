@@ -44,6 +44,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 || path.equals("/")
                 || path.equals("/index.html")
                 || path.endsWith(".html")
+                || path.endsWith("/actuator/prometheus")
                 || path.startsWith("/favicon.ico")
                 || path.startsWith("/api/auth/");
 
