@@ -27,13 +27,8 @@ public class AuthController {
     /** 회원가입 **/
     @PostMapping("/signUp")
     public ResponseEntity<String> signUp(@RequestBody SignUpRequestDTO signUpRequestDTO){
-        try {
-            authService.signUp(signUpRequestDTO);
-            return ResponseEntity.ok("회원가입 성공");
-        }
-        catch(Exception e){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage()); //401
-        }
+        authService.signUp(signUpRequestDTO);
+        return ResponseEntity.ok("회원가입 성공");
     }
 
     /** 로그인 **/

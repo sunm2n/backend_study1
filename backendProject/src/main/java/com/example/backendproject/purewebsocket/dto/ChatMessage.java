@@ -1,19 +1,18 @@
-package com.example.backendproject.user.dto;
+package com.example.backendproject.purewebsocket.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class ChatMessage {
 
-    private Long id;
-    private String userid;
+    private String roomId;
+    private String message;
+    private String from;
 
-    private UserProfileDTO profile;  // 추가
 }

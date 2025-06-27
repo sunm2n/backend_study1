@@ -33,7 +33,7 @@ public class Auth {
     @JoinColumn(name = "user_id") //auth.getUser()에 실제로 접근할 때 User 쿼리 발생!
     private User user;
 
-    public Auth( User user, String refreshToken, String accessToken, String tokenType) {
+    public Auth(User user, String refreshToken, String accessToken, String tokenType) {
         this.user = user;
         this.refreshToken = refreshToken;
         this.accessToken = accessToken;

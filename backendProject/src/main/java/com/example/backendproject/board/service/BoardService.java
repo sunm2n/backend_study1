@@ -35,6 +35,9 @@ public class BoardService {
     @Transactional
     public BoardDTO createBoard(BoardDTO boardDTO) {
 
+        long start = System.currentTimeMillis(); // 메서드 시작 시간
+        log.info("글 작성 메서드 시작");
+
         // userId(PK)를 이용해서 User 조회
         if (boardDTO.getUser_id() == null)
             throw new IllegalArgumentException("userId(PK)가 필요합니다!");
@@ -52,6 +55,8 @@ public class BoardService {
         board.setUser(user);
         Board saved = boardRepository.save(board);
 
+        long end = System.currentTimeMillis();
+        log.info("글 작성 완료 시간 = {}", (end - start) );
         return toDTO(saved);
     }
 
@@ -67,11 +72,19 @@ public class BoardService {
     /** 게시글 수정 **/
     @Transactional
     public BoardDTO updateBoard(Long boardId, BoardDTO dto) {
+
+        long start = System.currentTimeMillis(); // 메서드 시작 시간
+        log.info("글 수정 메서드 시작");
+
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + boardId));
         board.setTitle(dto.getTitle());
         board.setContent(dto.getContent());
         boardRepository.save(board);
+
+        long end = System.currentTimeMillis();
+        log.info("글 수정 완료 시간 = {}", (end - start) );
+
         return toDTO(board);
     }
 

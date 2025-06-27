@@ -22,6 +22,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserProfilerRepository userProfilerRepository;
+
+
     /** 내 정보 조회 **/
     @Transactional(readOnly = true)
     public UserDTO getMyInfo(Long id){

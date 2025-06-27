@@ -41,8 +41,6 @@ public interface BoardRepository extends JpaRepository<Board,Long> {
         List<BoardDTO> searchKeyword(@Param("keyword") String keyword);
 
 
-
-
         /** 페이징 적용 후 **/
         //페이징 전체 목록
         @Query("SELECT new com.example.backendproject.board.dto.BoardDTO(" +

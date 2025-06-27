@@ -83,15 +83,15 @@
     let myName = "";
 
     function connectToRoom(room, nick) {
-      //  const socket = new WebSocket('ws://localhost:8080/ws-gpt'); //로컬 테스트용
-        const socket = new WebSocket('ws://localhost/ws-gpt'); //도커 배포용
+        //  const socket = new WebSocket('ws://localhost:8080/ws-gpt'); //로컬 테스트용
+        const socket = new WebSocket('/ws-gpt'); //도커 배포용
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, function (frame) {
             document.getElementById('chatSection').style.display = '';
             document.getElementById('roomForm').style.display = 'none';
 
-            stompClient.subscribe('/topic/room/' + room, function (msg) {
+            stompClient.subscribe('/topic/gpt', function (msg) {
                 const data = JSON.parse(msg.body);
                 showMessage(data.from, data.message);
             });
@@ -130,7 +130,7 @@
         const input = document.getElementById('messageInput');
         const msg = input.value.trim();
         if (msg && stompClient && roomName) {
-            stompClient.send('/app/gpt/message/' + roomName, {}, JSON.stringify({from: myName, message: msg}));
+            stompClient.send('/app/gpt', {}, JSON.stringify({from: myName, message: msg}));
             input.value = '';
         }
     };

@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.example.backendproject.security.core.CustomUserDetailsService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -32,6 +34,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+
+        log.info("path : {}", path);
 
         // 정적 파일 경로, 필터
         return path.startsWith("/css/")
@@ -68,12 +72,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
             String url = request.getRequestURI().toString();
             String method = request.getMethod(); // "GET, POST, PUT"
-            System.out.println("현재 들어온 HTTP 요청 = "+url);
 
-            System.out.println("✅ 토큰 인증 성공: " + accessToken);
+            log.info("현재 들어온 HTTP 요청 = {}",url);
+            log.info("✅ 토큰 인증 성공:{} " ,accessToken);
+
         }
         else {
-            System.out.println("❌ 토큰 없음 또는 유효하지 않음: " + accessToken);
+            log.info("❌ 토큰 없음 또는 유효하지 않음: {}" ,accessToken);
         }
 
 

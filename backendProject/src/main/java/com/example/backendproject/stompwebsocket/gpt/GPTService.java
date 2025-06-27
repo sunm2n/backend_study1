@@ -1,5 +1,6 @@
 package com.example.backendproject.stompwebsocket.gpt;
 
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,6 @@ public class GPTService {
 
     public String gptMessage(String message) throws Exception{
 
-
         //API 호출을 위한 본문 작성
         Map<String,Object> requestBody  = new HashMap<>();
         requestBody .put("model","gpt-4.1");
@@ -32,6 +32,7 @@ public class GPTService {
                 .header("Content-Type","application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody))) //본문 삽입
                 .build();
+
 
         //요청 전송 및 응답 수신
         HttpClient  client = HttpClient.newHttpClient();

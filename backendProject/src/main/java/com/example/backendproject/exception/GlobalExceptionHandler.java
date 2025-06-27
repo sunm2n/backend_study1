@@ -1,35 +1,31 @@
 package com.example.backendproject.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
 import org.springframework.messaging.handler.annotation.support.MethodArgumentTypeMismatchException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-
 
 import java.nio.file.AccessDeniedException;
 
 @Slf4j
 @RestControllerAdvice
-// 스프링에서 모든 컨트롤러의 예외를 한 곳에서 처리하기 위한 어노테이션
+//스프링에서 모든 컨르롤러의 예외를 한 곳에서 처리하기 위한 어노테이션
 public class GlobalExceptionHandler {
 
 
-    // 컨트롤러에서 RuntimeException 에러가 발생했을 때 이 메서드가 대신 처리하도록 매핑
+    //컨트롤러에서 RuntimeException 에러가 발생했을 때 이 메서드가 대신 치리하도록 매핑
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException e) {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 2000,
-                "내가 전달하는 메시지",
+                "내가 전달하는 메세지",
                 e.getMessage()
         );
 
@@ -50,9 +46,6 @@ public class GlobalExceptionHandler {
         log.warn("[BAD_REQUEST] {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("잘못된 요청입니다: " + e.getMessage());
     }
-
-
-
 
 
     // 400: DTO validation(@Valid) 실패
@@ -89,6 +82,7 @@ public class GlobalExceptionHandler {
         log.error("[EXCEPTION][UNHANDLED] ", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
     }
+
 
     /**
 
@@ -132,4 +126,6 @@ public class GlobalExceptionHandler {
      504    GATEWAY_TIMEOUT                게이트웨이/프록시 시간 초과
 
      **/
+
+
 }

@@ -9,14 +9,19 @@ import java.util.Map;
 
 public class CustomHandshakeHandler extends DefaultHandshakeHandler {
 
+    /** Websocket에서 사용자의 식별자를 추출하기 위한 핸드쉐이크 핸들러 클래스 **/
+
     @Override
     protected Principal determineUser(ServerHttpRequest request,
                                       WebSocketHandler wsHandler,
                                       Map<String, Object> attributes) {
 
+        //Websocket이 연결이 시작될 때 클라이언트의 nickname 파라미터를 읽어서
+        //그 값을 Principal(인증정보)로 사용
         String nickname = getNickname(request.getURI().getQuery());
         return new StompPrincipal(nickname);
     }
+
 
     private String getNickname(String query){
         if (query == null || !query.contains("nickname=")){

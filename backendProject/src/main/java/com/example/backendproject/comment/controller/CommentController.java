@@ -20,7 +20,6 @@ public class CommentController {
 
     @PostMapping
     public ResponseEntity<CommentDTO> save(@RequestBody CommentDTO commentDTO) {
-
         CommentDTO response = commentService.saveComment(commentDTO);
         return ResponseEntity.ok(response);
     }

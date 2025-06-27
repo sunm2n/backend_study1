@@ -70,6 +70,8 @@ public class AuthService {
         User user = userRepository.findByUserid(loginRequestDTO.getUserid())
                 .orElseThrow(()->new RuntimeException("해당 유저를 찾을 수 없습니다."));
 
+
+
         //입력한 비밀번호가 암호화된 비밀번호와 일치하는지 확인
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())){
             throw new BadCredentialsException("비밀번호가 일치 하지 않습니다.");
@@ -104,35 +106,29 @@ public class AuthService {
 
     }
 
-    // 리프레시 토큰을 받아서 새로운 엑세스 토큰을 발급해주는 서비스
+    //리프레시 토큰을 받아서 새로운 엑세스 토큰을 발급해주는 서비스
     @Transactional
-    public String refreshToken(String refreshToken){
+    public String refreshToken(String refreshToken) {
         //리프레시 토큰 유효성 검사
-        if(jwtTokenProvider.validateToken(refreshToken)){
-            System.out.println("111111111111");
+        if (jwtTokenProvider.validateToken(refreshToken)) {
             //DB에서 리프레시토큰을 가진 사용자가 있는지 확인
             Auth auth = authRepository.findByRefreshToken(refreshToken).orElseThrow(
-                    ()->new IllegalArgumentException("해당 REFRESH_TOEKN 을 찾을 수 없습니다. \nREFRESH_TOEKN = " + refreshToken));
-            System.out.println("2222222222222");
+                    () -> new IllegalArgumentException("해당 REFRESH_TOKEN 을 찾을 수 없습니다.\nREFRESH_TOKEN = " + refreshToken));
+
             //있으면 인증객체를 만들어서 새로운 토큰 발급
             String newAccessToken = jwtTokenProvider.generateToken(
                     new UsernamePasswordAuthenticationToken(
-                            new CustomUserDetails(auth.getUser()), auth.getUser().getPassword()),jwtRefreshTokenExpirationTime); // 엑세스 토큰 만료시간으로 설정
+                            new CustomUserDetails(auth.getUser()), auth.getUser().getPassword()),jwtAccessTokenExpirationTime); //엑세스 토큰 만료시간으로 설정 중요!
 
-                    auth.setAccessToken(newAccessToken); // 토큰 업데이트
-                    authRepository.save(auth);
-            System.out.println("3333333333333333333");
-                    return newAccessToken;
+            auth.updateAccessToken(newAccessToken); //토큰 업데이트
+            authRepository.save(auth); // DB에 반영
+
+            return newAccessToken;
         }
-
-    else {
-        throw new IllegalArgumentException("토큰이 유효하지 않습니다.");
+        else {
+            throw new IllegalArgumentException("토큰이 유효하지 않습니다.");
+        }
     }
-
-    }
-
-
-
 
 
 }

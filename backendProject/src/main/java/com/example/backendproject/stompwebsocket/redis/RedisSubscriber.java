@@ -13,10 +13,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RedisSubscriber implements MessageListener{
 
-
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private ObjectMapper objectMapper = new ObjectMapper();
-
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -25,21 +23,16 @@ public class RedisSubscriber implements MessageListener{
             String msgBody = new String(message.getBody());
             ChatMessage chatMessage = objectMapper.readValue(msgBody, ChatMessage.class);
 
-
             if (chatMessage.getTo() != null && !chatMessage.getTo().isEmpty()) {
                 // 귓속말
                 simpMessagingTemplate.convertAndSendToUser(chatMessage.getTo(), "/queue/private", chatMessage);
             } else {
                 // 일반 메시지
                 simpMessagingTemplate.convertAndSend("/topic/room." + chatMessage.getRoomId(), chatMessage);
-
-
             }
         }
         catch (Exception e) {
-
+            e.getMessage();
         }
-
     }
-
 }

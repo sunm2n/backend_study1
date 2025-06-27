@@ -60,7 +60,8 @@ public class SecurityConfig {
                                         "/oauth2/**",         // 소셜 로그인 엔드포인트는 누구나 접근
                                         "/login/**",          // 스프링 시큐리티 내부 로그인 관련 엔드포인트
                                         "/ws-gpt", "/ws-chat", // 웹소켓 핸드셰이크
-                                        "/actuator/prometheus" //프로메테우스
+                                        "/actuator/prometheus", //프로메테우스
+                                        "/exception"
                                 ).permitAll() // 웹소켓 핸드셰이크는 모두 허용!
 
                                 .requestMatchers(

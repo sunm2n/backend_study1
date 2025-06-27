@@ -1,59 +1,60 @@
 package com.example.backendproject.stompwebsocket.controller;
 
 
-import com.example.backendproject.stompwebsocket.gpt.GPTService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import com.example.backendproject.stompwebsocket.dto.ChatMessage;
+import com.example.backendproject.stompwebsocket.gpt.GPTService;
 import com.example.backendproject.stompwebsocket.redis.RedisPublisher;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
 
-
     //서버가 클라이언트에게 수동으로 메세지를 보낼 수 있도록 하는 클래스
     private final SimpMessagingTemplate template;
 
-    //동적으로 방 생성 가능
+    //환경 변수를 받아서 화면에 출력
     @Value("${PROJECT_NAME:web Server}")
     private String instansName;
-
     private final RedisPublisher redisPublisher;
-    private ObjectMapper objectMapper  = new ObjectMapper();
+    private final ObjectMapper objectMapper  = new ObjectMapper();
 
-    private final GPTService gptService;
+    private final GPTService  gptService;
 
 
-
-    // 단일 브로드캐스트 (방을 동적으로 생성이 안됨)
+    /** 클라이언트가 서버로 보낼 앤드포인트 **/
+    //gpt ai 챗봇 앤드포인트
     @MessageMapping("/gpt")
     public void sendMessageGPT(ChatMessage message) throws Exception {
 
+        template.convertAndSend("/topic/gpt",message);
+        //내가 보낸 메세지 내 채팅방에 반환
 
-        template.convertAndSend("/topic/gpt",message); // 내가 보낸 메세지 출력
 
-        ///  gpt 메시지 반환
         String getResponse = gptService.gptMessage(message.getMessage());
+        //GPT API 요청을 위해 내가 보낸 메세지로 HTTP 요청 보냄
+
+
         ChatMessage chatMessage = new ChatMessage("난 GPT",getResponse);
         template.convertAndSend("/topic/gpt",chatMessage);
+        //GPT API 응답을 내 채팅방에 반환
 
     }
 
 
 
+    /** 클라이언트가 서버로 보낼 앤드포인트 **/
+    // 단체 체팅방 앤드포인트
     @MessageMapping("/chat.sendMessage")
-    public void sendmessage(ChatMessage message) throws JsonProcessingException {
+    public void sendMessage(ChatMessage message) throws JsonProcessingException {
 
         message.setMessage(instansName+" "+message.getMessage());
 
@@ -62,7 +63,6 @@ public class ChatController {
 
         if (message.getTo() != null && !message.getTo().isEmpty()) {
             // 귓속말
-            //내 아이디로 귓속말경로를 활성화 함
             channel = "private."+message.getRoomId();
             msg = objectMapper.writeValueAsString(message);
 
@@ -72,30 +72,7 @@ public class ChatController {
             msg = objectMapper.writeValueAsString(message);
         }
 
-
-        redisPublisher.publish(channel,msg);
-
+        redisPublisher.publish(channel,msg); //Redis에게 메세지 발행
 
     }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        // accessToken 쿠키 삭제
-        Cookie accessTokenCookie = new Cookie("accessToken", null);
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setPath("/");
-        accessTokenCookie.setMaxAge(0); // 즉시 만료!
-        // refreshToken 쿠키 삭제
-        Cookie refreshTokenCookie = new Cookie("refreshToken", null);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(0);
-        // 응답에 쿠키 삭제 포함
-        response.addCookie(accessTokenCookie);
-        response.addCookie(refreshTokenCookie);
-        // (추가) 서버 세션도 있다면 만료
-        // request.getSession().invalidate();
-        return ResponseEntity.ok().body("로그아웃 완료 (쿠키 삭제됨)");
-    }
-
 }
