@@ -24,6 +24,9 @@ public class AuthController {
 
     private final AuthService authService;
 
+
+
+
     /** 회원가입 **/
     @PostMapping("/signUp")
     public ResponseEntity<String> signUp(@RequestBody SignUpRequestDTO signUpRequestDTO){

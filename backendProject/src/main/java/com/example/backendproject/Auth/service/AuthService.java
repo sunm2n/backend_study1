@@ -1,3 +1,4 @@
+
 package com.example.backendproject.Auth.service;
 
 import lombok.RequiredArgsConstructor;
@@ -115,7 +116,7 @@ public class AuthService {
             Auth auth = authRepository.findByRefreshToken(refreshToken).orElseThrow(
                     () -> new IllegalArgumentException("해당 REFRESH_TOKEN 을 찾을 수 없습니다.\nREFRESH_TOKEN = " + refreshToken));
 
-            //있으면 인증객체를 만들어서 새로운 토큰 발급
+            //있으면 인증객체를 만ㄷ르어서 새로운 토큰 발급
             String newAccessToken = jwtTokenProvider.generateToken(
                     new UsernamePasswordAuthenticationToken(
                             new CustomUserDetails(auth.getUser()), auth.getUser().getPassword()),jwtAccessTokenExpirationTime); //엑세스 토큰 만료시간으로 설정 중요!
