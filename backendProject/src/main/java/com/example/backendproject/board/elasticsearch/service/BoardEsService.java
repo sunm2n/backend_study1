@@ -28,7 +28,6 @@ public class BoardEsService {
 
     // 엘라스틱서치에 명령을 전달하는 자바 API
     private final ElasticsearchClient client;
-
     private final BoardEsRepository repository;
 
     // 데이터 저장 메서드
@@ -46,7 +45,6 @@ public class BoardEsService {
     public Page<BoardEsDocument> search(String keyword, int page, int size) {
 
         try {
-
 
             // 엘라스틱서치에서 페이징을 위한 시작 위치를 계산하는 변수
             int from = page * size;
@@ -69,6 +67,12 @@ public class BoardEsService {
                     //PrefixQuery는 해당 필드가 특정 단어로 시작되는지 검사하는 쿼리
                     //MatchQuery는 해당 단어가 포함되어 있는지 검색하는 쿼리
 
+                    /**
+                     must: 모두 일치해야 함 (AND)
+                     should: 하나라도 일치하면 됨 (OR)
+                     must_not: 해당 조건을 만족하면 제외
+                     filter : must와 같지만 점수 계산 안함 (속도가 빠름)
+                     **/
 
                     b.should(PrefixQuery.of(p -> p.field("title").value(keyword))._toQuery());
                     b.should(PrefixQuery.of(p -> p.field("content").value(keyword))._toQuery());
@@ -77,7 +81,7 @@ public class BoardEsService {
 
                 })._toQuery();
             }
-            //
+
             // SearchRequest는 엘라스틱 서치에서 검색을 하기 위한 검색요청 객체
             // 인덱스명, 페이징 정보, 쿼리를 포함한 검색 요청
             SearchRequest request = SearchRequest.of(s -> s
@@ -105,7 +109,7 @@ public class BoardEsService {
             return new PageImpl<>(contnet, PageRequest.of(page, size), total);
 
         } catch (IOException e) {
-            log.error("검색 오류 ", e.getMessage());
+            log.error("검색 오류 ", e);
             throw new RuntimeException("검색 중 오류 발생", e);
         }
     }
