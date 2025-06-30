@@ -318,7 +318,62 @@ docker network create prod_server
 ### 🔍 결과 확인
 
 ✅ **ElasticSearch 상태 확인**
-```bash
+
 curl -X GET "localhost:9200/_cat/indices?v"
 
+---
 
+## 📅 9일차
+
+## ElasticSearch 검색 기능 (접두어, 초성, 중간 글자, 오타 허용) 및 MySQL-ElasticSearch 분리 관리
+
+## ✅ 주요 작업
+- ElasticSearch 기반 게시판 검색 기능 구현
+- 접두어, 초성, 중간 글자, 오타 허용 검색 기능 구현
+- MySQL과 ElasticSearch 분리 관리 가능하도록 구성
+
+## 🛠️ ElasticSearch 검색 기능
+- 접두어 검색: `autocomplete_analyzer` 사용
+- 중간 글자 검색: `ngram_analyzer` 사용
+- 초성 검색: `chosung_analyzer` 사용
+- 오타 허용 검색: `fuzziness: "AUTO"` 옵션 (3자 이상부터 적용)
+
+## 🛠️ 주요 파일 및 구성
+
+- **인덱스: `board-index`**
+  - `autocomplete_analyzer`, `ngram_analyzer`, `chosung_analyzer` 적용
+
+- **BoardEsDocument**
+  - ElasticSearch 전용 DTO
+  - `title`, `content`, `username`, `userId`, `created_date`, `updated_date` 필드 저장
+
+- **BoardEsService**
+  - `search(keyword, page, size)` 메서드
+    - 접두어 검색: `PrefixQuery`
+    - 중간 글자 검색: `MatchQuery`
+    - 초성 검색: `PrefixQuery`
+    - 오타 허용 검색: `MatchQuery` + `fuzziness: "AUTO"`
+  - `bulkIndexInsert` 메서드를 통한 대용량 색인 가능
+
+- **BoardEsController**
+  - 검색 API 경로: `/boards/elasticsearch?keyword={keyword}&page={page}&size={size}`
+
+- **BoardEsRepository**
+  - `ElasticsearchRepository<BoardEsDocument, String>` 기반 CRUD 지원
+
+## 🛠️ 테스트 및 확인
+- Postman 및 브라우저를 통한 검색 API 정상 동작 확인
+- Kibana Dev Tools:
+  ```json
+  GET board-index/_search
+  {
+    "query": {
+      "match_all": {}
+    }
+  }
+
+- ElasticSearch 인덱스 상태 확인:
+  ```bash
+  curl -X GET "localhost:9200/_cat/indices?v"
+  ```
+- 대용량 색인 이후에도 검색 속도 및 정확도 정상 유지
