@@ -1,6 +1,6 @@
 # 프로젝트 개요
 
-이 프로젝트는 Docker 환경에서 Spring Boot 기반의 백엔드 서버 3개와 Nginx 로드 밸런서, 그리고 STOMP 기반 WebSocket 채팅 서버를 구성하여, 클라우드 환경과 유사한 로컬 개발 환경을 구성하는 것을 목표로 합니다.
+
 
 ---
 
@@ -111,7 +111,6 @@
 - 백엔드 코드를 수정해도 **DB까지 영향을 받음**
 - **테스트나 배포 유연성이 낮음**
 
----
 
 ## 🔀 분리 후: `data` / `backend`로 구분
 
@@ -123,7 +122,6 @@
 - Spring 백엔드 서버 3개 + Nginx 로드밸런서 정의
 - DB와 Redis는 **연결만 하고 직접 실행하지 않음**
 
----
 
 ## ✅ 구조 분리의 장점
 
@@ -136,7 +134,6 @@
 | **장애 격리** | 데이터 서비스 장애가 있어도 백엔드를 **따로 유지 가능** |
 | **로컬 테스트 최적화** | `backend`만 여러 번 재기동하며 개발/테스트하기 쉬움 |
 
----
 
 ## 📌 외부 네트워크 사용
 
@@ -176,8 +173,6 @@ docker network create prod_server
 
 ---
 
----
-
 ## 📅 6일차
 **게시판 기능 구현 (CRUD, 검색, 페이징) 및 대용량 배치 저장 처리**
 
@@ -192,7 +187,6 @@ docker network create prod_server
 - `Board`는 `User`와 다대일(`@ManyToOne`) 관계이며, 댓글(Comment)과는 일대다(`@OneToMany`)로 매핑됨
 - 모든 작업은 `BoardDTO`를 통해 클라이언트와 데이터 송수신 처리
 
----
 
 ### 🔍 검색 및 페이징 기능
 
@@ -205,7 +199,6 @@ docker network create prod_server
   → 대소문자 구분 없이 `LIKE` 검색 수행
 - **검색 + 페이징 동시 지원**
 
----
 
 ### 🧱 대용량 게시글 배치 저장
 
@@ -216,15 +209,12 @@ docker network create prod_server
 - `/boards/jpaBatchInsert` API는 `List<Board>`를 `EntityManager.persist()` 방식으로 저장
   - 1000개마다 `flush()` 및 `clear()` 호출하여 메모리 사용량 제어
 
----
 
 ### 🔍 결과 확인
 
 - CRUD, 검색, 페이징 기능이 모두 정상 동작함
 - 수천 개의 게시글도 `/batchInsert`, `/jpaBatchInsert` API를 통해 안정적으로 저장됨
 - `username`, `user_id`, `created_date`, `updated_date` 정보가 `BoardDTO`에 포함되어 응답으로 제공됨
-
----
 
 ---
 
@@ -266,3 +256,69 @@ docker network create prod_server
 - 게시판 글 작성 시 현재 로그인한 사용자의 ID가 자동 연결됨
 - 로그인 후 토큰 없이 요청 시 접근 차단(403) 확인 완료
 - Refresh Token을 통한 Access Token 갱신 기능 정상 작동
+
+---
+
+## 📅 8일차
+**ElasticSearch + Logstash + Kibana 구축**
+
+### ✅ 주요 작업
+
+- `prod_server` 네트워크 기반으로 **ElasticSearch, Logstash, Kibana 컨테이너 구축 및 연동**
+- `backend1 ~ backend3` 애플리케이션 로그를 Logstash → ElasticSearch로 전달 후 Kibana 시각화
+- `logback-spring.xml`을 사용해 **ELK 연동용 파일 로그 출력 구조 적용**
+
+
+### 🛠️ 로그 수집 및 전달 구조
+
+- **로그 경로**: `logs/app.log`
+- **출력 패턴**: `%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-3level] %logger{5} - %msg%n`
+- **RollingFileAppender** 사용:
+  - 일자별 파일 자동 분리(`app-YYYY-MM-DD.log`)
+  - **10일치까지만 보관 후 자동 삭제**
+- 콘솔 비동기(ASYNC) + 파일 로그 동시 출력, `root level="INFO"` 설정
+
+
+### 🛠️ Logstash 설정
+
+- **input**: `/logs/app.log`, `start_position => "beginning"`, `sincedb_path => "/dev/null"`
+- **filter**:
+  - `grok`으로 `timestamp`, `thread`, `level`, `logger`, `log` 추출
+  - `AOP_LOG` → `log_type: aop`, `OAuth2_LOG` → `log_type: OAuth2`
+  - `date` 필터로 `@timestamp` 변환, `Asia/Seoul` 타임존 적용
+- **output**:
+  - ElasticSearch(`http://elasticsearch:9200`), 인덱스: `spring-logs-%{+YYYY.MM.dd}`
+  - `stdout { codec => rubydebug }` (디버깅용)
+
+
+### 🛠️ Docker Compose 기반 ELK 구성
+
+- **ElasticSearch**
+  - 이미지: `docker.elastic.co/elasticsearch/elasticsearch:8.12.0`
+  - 포트: `9200`, `9300`
+  - 환경: `xpack.security.enabled=false`
+  - 볼륨: `./volumes/esdata:/usr/share/elasticsearch/data`
+
+- **Kibana**
+  - 이미지: `docker.elastic.co/kibana/kibana:8.12.0`
+  - 포트: `5601`
+  - 환경: `ELASTICSEARCH_HOSTS=http://elasticsearch:9200`
+  - 볼륨: `./volumes/kibana-data:/usr/share/kibana/data`
+
+- **Logstash**
+  - 이미지: `docker.elastic.co/logstash/logstash:8.12.0`
+  - 포트: `5044`, `5000`
+  - 볼륨:
+    - `./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf`
+    - `./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro`
+    - `../../logs:/logs`
+  - 네트워크: `prod_server`
+
+
+### 🔍 결과 확인
+
+✅ **ElasticSearch 상태 확인**
+```bash
+curl -X GET "localhost:9200/_cat/indices?v"
+
+
