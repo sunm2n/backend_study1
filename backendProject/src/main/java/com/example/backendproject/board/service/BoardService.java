@@ -1,6 +1,8 @@
 package com.example.backendproject.board.service;
 
-import jakarta.annotation.PostConstruct;
+
+import com.example.backendproject.board.elasticsearch.dto.BoardEsDocument;
+import com.example.backendproject.board.elasticsearch.service.BoardEsService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,10 @@ public class BoardService {
     private final EntityManager  em;
 
 
+    // 엘라스틱 서치 Service
+    private final BoardEsService boardEsService;
+
+
     /** 글 등록 **/
     @Transactional
     public BoardDTO createBoard(BoardDTO boardDTO) {
@@ -52,8 +58,22 @@ public class BoardService {
         // 연관관계 매핑!
         board.setUser(user);
         Board saved = boardRepository.save(board);
+        // mysql 저장 완료
 
-        return toDTO(saved);
+        // 엘라스틱 서치에 저장 시작
+        BoardEsDocument doc = BoardEsDocument.builder()
+                .id(String.valueOf(board.getId()))
+                .title(board.getTitle())
+                .content(board.getContent())
+                .userId(board.getUser().getId())
+                .username(board.getUser().getUserProfile().getUsername())
+                .create_date(String.valueOf(board.getCreated_date()))
+                .update_date(String.valueOf(board.getUpdated_date()))
+                .build();
+        boardEsService.save(doc);
+
+
+    return toDTO(saved);
     }
 
 
@@ -75,6 +95,19 @@ public class BoardService {
         board.setContent(dto.getContent());
         boardRepository.save(board);
 
+        // 엘라스틱 서치에 데이터 수정
+        BoardEsDocument doc = BoardEsDocument.builder()
+                .id(String.valueOf(board.getId()))
+                .title(board.getTitle())
+                .content(board.getContent())
+                .userId(board.getUser().getId())
+                .username(board.getUser().getUserProfile().getUsername())
+                .create_date(String.valueOf(board.getCreated_date()))
+                .update_date(String.valueOf(board.getUpdated_date()))
+                .build();
+        boardEsService.save(doc);
+
+
         return toDTO(board);
     }
 
@@ -90,8 +123,11 @@ public class BoardService {
 
         if (!boardRepository.existsById(boardId))
             throw new IllegalArgumentException("게시글 없음: " + boardId);
-
+        //mysql 삭제
         boardRepository.deleteById(boardId);
+
+        // 엘라스틱서치 삭제
+        boardEsService.deleteById(String.valueOf(boardId));
     }
 
 
