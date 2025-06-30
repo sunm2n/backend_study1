@@ -1,10 +1,7 @@
 package com.example.backendproject.board.elasticsearch.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.PrefixQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
@@ -65,6 +62,8 @@ public class BoardEsService {
                 //boolquery는 복수 조건을 조합할 때 사용하는 쿼리
                 // 이 쿼리 안에서 여러개의 조건을 나열
                 //예를 들어서 "백앤드"라는 키워드가 들어왔을 때 이 "백앤드" 키워드를 어떻게 분석해서 데이터를 보여줄 것인가를 작성
+
+
                 query = BoolQuery.of(b ->{
 
 
@@ -74,6 +73,7 @@ public class BoardEsService {
                      must_not: 해당 조건을 만족하면 제외
                      filter : must와 같지만 점수 계산 안함 (속도가 빠름)
                      **/
+
 
                     // PrefixQuery는 해당 필드가 특정 단어로 시작하는지 검사하는 쿼리
                     // MatchQuery 는 해당 단어가 포함되어 있는지 검사하는 쿼리
@@ -86,8 +86,17 @@ public class BoardEsService {
                     b.should(PrefixQuery.of(p->p.field("title.chosung").value(keyword))._toQuery());
                     b.should(PrefixQuery.of(p->p.field("content.chosung").value(keyword))._toQuery());
 
-                    b.should(PrefixQuery.of(p->p.field("title.ngram").value(keyword))._toQuery());
-                    b.should(PrefixQuery.of(p->p.field("content.ngram").value(keyword))._toQuery());
+                    // 중간 글자 검색(match만 가능)
+                    b.should(MatchQuery.of(p->p.field("title.ngram").query(keyword))._toQuery());
+                    b.should(MatchQuery.of(p->p.field("content.ngram").query(keyword))._toQuery());
+
+                    // fuzziness: "AUTO"는  오타 허용 검색 기능을 자동으로 켜주는 설정 -> 유사도 계산을 매번 수행하기 때문에 느림
+                    //짧은 키워드에는 사용 xxx
+                    //오타 허용 (오타허용은 match만 가능 )
+                    if (keyword.length()>=3){
+                        b.should(MatchQuery.of(m ->m.field("title").query(keyword).fuzziness("AUTO"))._toQuery());
+                        b.should(MatchQuery.of(m ->m.field("content").query(keyword).fuzziness("AUTO"))._toQuery());
+                    }
 
                     return b;
 
