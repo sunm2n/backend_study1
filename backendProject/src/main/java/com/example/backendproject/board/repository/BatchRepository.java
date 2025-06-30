@@ -40,4 +40,32 @@ public class BatchRepository {
         });
     }
 
+
+    public List<BoardDTO> findByBatchKey(String batchKey) {
+        String sql = "SELECT b.id, b.title, b.content, b.user_id, b.created_date, b.updated_date, b.batchkey, up.username " +
+                "FROM board b " +
+                "JOIN `user` u ON b.user_id = u.id " +
+                "JOIN user_profile up ON up.user_id = u.id " +
+                "WHERE b.batchkey = ?";
+
+        return jdbcTemplate.query(sql, new Object[]{batchKey}, (rs, rowNum) -> {
+            BoardDTO dto = new BoardDTO();
+            dto.setId(rs.getLong("id"));
+            dto.setTitle(rs.getString("title"));
+            dto.setContent(rs.getString("content"));
+            dto.setUser_id(rs.getLong("user_id"));
+            dto.setCreated_date(rs.getTimestamp("created_date") != null ? rs.getTimestamp("created_date").toLocalDateTime() : null);
+            dto.setUpdated_date(rs.getTimestamp("updated_date") != null ? rs.getTimestamp("updated_date").toLocalDateTime() : null);
+            dto.setBatchkey(rs.getString("batchkey"));
+            dto.setUsername(rs.getString("username"));
+            return dto;
+        });
+
+
+    }
+
+
+
+
+
 }
