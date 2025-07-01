@@ -1,6 +1,7 @@
 package com.example.backendproject.board.elasticsearch.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
@@ -111,6 +112,14 @@ public class BoardEsService {
                     .from(from)
                     .size(size)
                     .query(query)
+
+                    // 정렬
+                    .sort(sort->sort
+                            .field(f->f
+                                    .field("created_date") // 정렬 대상 필드명
+                                    .order(SortOrder.Desc) // 최신순
+                            )
+                    )
             );
             // SearchResponse는 엘라스팃서치의 검색 결과를 담고 있는 응답 객체
             SearchResponse<BoardEsDocument> response =
