@@ -54,8 +54,11 @@ dependencies {
     //프로메테우스
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
-    //elastivserch
+    //elastivsearch
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+    //kafka
+    implementation 'org.springframework.kafka:spring-kafka'
 }
 
 tasks.named('test') {

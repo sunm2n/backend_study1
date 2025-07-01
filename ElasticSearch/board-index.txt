@@ -165,6 +165,9 @@ PUT /board-index
       "updated_date": {
           "type": "date",
           "format": "yyyy-MM-dd HH:mm:ss.SSSSSS||yyyy-MM-dd HH:mm:ss||strict_date_optional_time||epoch_millis"
+      },
+      "viewCount": {
+      "type": "long"
       }
 
     }

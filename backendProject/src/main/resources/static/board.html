@@ -42,7 +42,8 @@
 
     <div id="search-area">
         <!--        <input type="text" id="search" placeholder="검색어 입력">-->
-        <input type="text" id="search" placeholder="검색어 입력" oninput="searchPosts(0)"> <!--  입력하자마자 반응-->
+<!-- 20250630 추가 oninput="debouncedSearchPosts(0)" -->
+        <input type="text" id="search" oninput="debouncedSearchPosts(0)" placeholder="검색어 입력" > <!--  입력하자마자 반응-->
         <button onclick="searchPosts()">검색</button>
     </div>
 
@@ -52,7 +53,7 @@
         <table class="board-list" id="board-table">
             <thead>
             <tr>
-                <th>번호</th><th>제목</th><th>작성자</th><th>작성일</th>
+                <th>번호</th><th>제목</th><th>작성자</th><th>작성일</th><th>조회수</th>
             </tr>
             </thead>
             <tbody id="board-list-body"></tbody>
@@ -91,6 +92,7 @@
         <div style="margin-top:8px;color:#666;font-size:14px;">
             작성자: <span id="detail-writer"></span>
             <span style="margin-left:10px;">작성일: <span id="detail-date"></span></span>
+            <span style="margin-left:10px;">조회수: <span id="detail-viewCount"></span></span>
         </div>
         <button class="write-btn" id="edit-btn" onclick="showEditForm()">수정</button>
         <button class="list-btn" onclick="showList()">목록</button>
@@ -136,8 +138,16 @@
     //페이징 적용
     function searchPosts(page = 0) {
         const keyword = document.getElementById('search').value;
+
+        // ✅ 아무것도 입력 안 했으면 전체 게시글로 전환 //20250630 추가
+        if (keyword.length === 0) {
+            loadBoards(page);
+            return;
+        }
+        if (keyword.length < 2) return; // 2글자 이상부터 검색 //20250630 추가
+
         //fetchWithAuth(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}&sort=title,desc`,{ //정렬
-        //  fetchWithAuth(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{  // jpa 검색
+      //    fetchWithAuth(`/boards/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{  // jpa 검색
         fetchWithAuth(`/boards/elasticsearch?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${pageSize}`,{ //엘라스틱서치 검색
             credentials: "include", // 쿠키도 항상 보냄 (로컬, CORS 모두 안전)
             headers: (localStorage.getItem("accessToken"))
@@ -152,6 +162,16 @@
                 currentPage = list.number || 0;
             });
     }
+
+    //20250630 추가
+    function debounce(func, delay) {
+        let timeoutId;
+        return function (...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+    const debouncedSearchPosts = debounce(searchPosts, 300);
 
     //페이징 적용전
     // function searchPosts() {
@@ -188,6 +208,7 @@
             <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
             <td>${b.username || b.user_id}</td>
             <td>${b.created_date ? b.created_date.substring(0,10) : ''}</td>
+            <td>${b.viewCount ?? 0}</td>
         </tr>`;
         });
         document.getElementById('board-list-body').innerHTML = html;
@@ -303,7 +324,7 @@
                 document.getElementById('detail-title').textContent = board.title;
                 document.getElementById('detail-content').textContent = board.content;
                 document.getElementById('detail-writer').textContent = board.user_id;
-
+                document.getElementById('detail-viewCount').textContent = board.viewCount ?? 0;
                 console.log("localStorage.getItem(user_id) = ",localStorage.getItem("user_id"))
                 console.log("board.user_id = ",board.user_id)
 

@@ -29,6 +29,7 @@ public class BoardEsDocument {
     private Long userId;
     private String created_date;
     private String updated_date;
+    private Long viewCount = 0L;
 
     // BoarDTO를 엘라스틱 전용 DTO로 변환하는 메서드
     public static BoardEsDocument from(BoardDTO dto) {
@@ -40,6 +41,7 @@ public class BoardEsDocument {
                 .userId(dto.getUser_id())
                 .created_date(dto.getCreated_date()!=null ? dto.getCreated_date().toString() : null)
                 .updated_date(dto.getUpdated_date()!=null ? dto.getUpdated_date().toString() : null)
+                .viewCount(dto.getViewCount())
                 .build();
     }
 }
