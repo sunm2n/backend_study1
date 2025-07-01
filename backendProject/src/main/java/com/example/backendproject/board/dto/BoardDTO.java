@@ -27,6 +27,7 @@ public class BoardDTO {
 
     private String batchkey;
 
+    @JsonProperty("view_count")
     private Long viewCount;
 
     public BoardDTO(Long id, String title, String content,String username, Long user_id,  LocalDateTime created_date, LocalDateTime updated_date, Long viewCount) {

@@ -92,7 +92,7 @@
         <div style="margin-top:8px;color:#666;font-size:14px;">
             작성자: <span id="detail-writer"></span>
             <span style="margin-left:10px;">작성일: <span id="detail-date"></span></span>
-            <span style="margin-left:10px;">조회수: <span id="detail-viewCount"></span></span>
+            <span style="margin-left:10px;">조회수: <span id="detail-view_count"></span></span>
         </div>
         <button class="write-btn" id="edit-btn" onclick="showEditForm()">수정</button>
         <button class="list-btn" onclick="showList()">목록</button>
@@ -208,7 +208,7 @@
             <td class="title" onclick="showDetail(${b.id})">${b.title}</td>
             <td>${b.username || b.user_id}</td>
             <td>${b.created_date ? b.created_date.substring(0,10) : ''}</td>
-            <td>${b.viewCount ?? 0}</td>
+            <td>${b.view_count ?? 0}</td>
         </tr>`;
         });
         document.getElementById('board-list-body').innerHTML = html;
@@ -324,7 +324,7 @@
                 document.getElementById('detail-title').textContent = board.title;
                 document.getElementById('detail-content').textContent = board.content;
                 document.getElementById('detail-writer').textContent = board.user_id;
-                document.getElementById('detail-viewCount').textContent = board.viewCount ?? 0;
+                document.getElementById('detail-view_count').textContent = board.view_count ?? 0;
                 console.log("localStorage.getItem(user_id) = ",localStorage.getItem("user_id"))
                 console.log("board.user_id = ",board.user_id)
 

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -44,8 +45,12 @@ public class BoardEsController {
         return ResponseEntity.ok(boardEsService.search(keyword, page, size));
     }
 
-
-
+    // localhost:8080/boards/top-keywords
+    @GetMapping("/top-keywords")
+    public ResponseEntity<List<String>> getTopKeyWord() {
+        List<String> keywords = boardEsService.getTopSearchKeyword();
+        return ResponseEntity.ok(keywords);
+    }
 
 
 

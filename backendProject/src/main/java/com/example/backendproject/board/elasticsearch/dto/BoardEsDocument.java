@@ -3,6 +3,7 @@ package com.example.backendproject.board.elasticsearch.dto;
 
 import com.example.backendproject.board.dto.BoardDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ public class BoardEsDocument {
     private Long userId;
     private String created_date;
     private String updated_date;
+    @JsonProperty("view_count")
     private Long viewCount = 0L;
 
     // BoarDTO를 엘라스틱 전용 DTO로 변환하는 메서드
