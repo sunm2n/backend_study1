@@ -377,3 +377,48 @@ curl -X GET "localhost:9200/_cat/indices?v"
   curl -X GET "localhost:9200/_cat/indices?v"
   ```
 - 대용량 색인 이후에도 검색 속도 및 정확도 정상 유지
+
+---
+
+## 📅 10일차
+**Kafka 기반 검색 이벤트 처리 및 Elasticsearch 검색어 통계 적재**
+
+### ✅ 주요 작업
+
+- Kafka를 이용하여 검색 이벤트 비동기 전송 처리
+- 검색 시 검색어 이벤트를 Kafka Topic에 발행
+- Kafka Consumer에서 수신한 검색 이벤트를 Elasticsearch에 저장
+- Elasticsearch에 검색어, 사용자 ID, 검색 시간 저장
+- Docker 기반 Kafka, Zookeeper, Elasticsearch 컨테이너 실행 및 연동 확인
+- 검색 → Kafka 발행 → Consumer → Elasticsearch 저장 **단일 플로우 테스트 완료**
+
+
+## 🛠️ Kafka & Elasticsearch 구성
+
+- **Kafka Producer/Consumer**
+  - `SearchLogMessage` DTO 사용
+  - Kafka Topic: `search-log`
+  - Consumer Group: `search-log-group`
+  - 수신 메시지를 `SearchLogDocument`로 변환하여 Elasticsearch에 저장
+
+- **Elasticsearch Repository**
+  - `SearchLogEsRepository`를 통해 `SearchLogDocument` CRUD 처리
+  - `SearchLogEsService`의 `save()` 메서드로 데이터 저장
+
+
+## 🐳 Docker Compose 구성
+
+- **Kafka, Zookeeper**: Kafka Topic 발행 및 Consumer 수신
+- **Elasticsearch, Kibana, Logstash**: 검색어 통계 및 로그 분석 처리
+- **Prometheus, Grafana**: 서버 상태 모니터링
+
+
+## 🖼️ Kibana 검색어 통계
+
+![검색어 통계](./DashBoardSearchResult.png)
+
+## 🔍 결과 확인
+
+- Kafka 기반 검색 이벤트가 비동기 처리되어 Elasticsearch에 적재됨
+- Kibana에서 검색어 통계를 시각적으로 확인 가능
+- Docker Compose를 통해 Kafka, Zookeeper, Elasticsearch, Kibana, Logstash, Prometheus, Grafana 환경을 한 번에 구성하여 연동 완료
